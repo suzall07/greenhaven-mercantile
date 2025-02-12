@@ -9,8 +9,9 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import IndoorPlants from "./pages/IndoorPlants";
+import OutdoorPlants from "./pages/OutdoorPlants";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -27,6 +28,8 @@ function App() {
         <TooltipProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/indoor-plants" element={<IndoorPlants />} />
+            <Route path="/outdoor-plants" element={<OutdoorPlants />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />

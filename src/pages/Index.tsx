@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { toast } = useToast();
@@ -62,9 +63,18 @@ const Index = () => {
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             Discover the perfect blend of nature and style
           </p>
-          <Button className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-            Shop Now
-          </Button>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/indoor-plants">
+              <Button variant="default" className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+                Indoor Plants
+              </Button>
+            </Link>
+            <Link to="/outdoor-plants">
+              <Button variant="outline" className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
+                Outdoor Plants
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -75,7 +85,7 @@ const Index = () => {
             Featured Products
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {products?.map((product, index) => (
+            {products?.slice(0, 3).map((product, index) => (
               <div
                 key={product.id}
                 className="product-card"
@@ -102,6 +112,39 @@ const Index = () => {
               </div>
             ))}
           </div>
+          <div className="text-center mt-8">
+            <Link to="/indoor-plants">
+              <Button variant="outline">View All Products</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-12 px-4 bg-secondary/10">
+        <div className="container mx-auto">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">About GreenHaven</h2>
+            <p className="text-muted-foreground mb-6">
+              At GreenHaven, we believe in bringing the beauty and tranquility of nature into your living spaces. Our carefully curated collection of plants helps you create your perfect indoor or outdoor sanctuary.
+            </p>
+            <Link to="/about">
+              <Button variant="link">Learn More About Us</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact CTA */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-4">Need Help?</h2>
+          <p className="text-muted-foreground mb-6">
+            Our plant experts are here to help you choose the perfect plants for your space.
+          </p>
+          <Link to="/contact">
+            <Button>Contact Us</Button>
+          </Link>
         </div>
       </section>
     </div>

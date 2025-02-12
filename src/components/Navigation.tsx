@@ -20,6 +20,12 @@ export const Navigation = () => {
             <Link to="/" className="nav-link">
               Home
             </Link>
+            <Link to="/indoor-plants" className="nav-link">
+              Indoor Plants
+            </Link>
+            <Link to="/outdoor-plants" className="nav-link">
+              Outdoor Plants
+            </Link>
             <Link to="/about" className="nav-link">
               About
             </Link>
@@ -63,6 +69,20 @@ export const Navigation = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link
+                to="/indoor-plants"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Indoor Plants
+              </Link>
+              <Link
+                to="/outdoor-plants"
+                className="nav-link"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Outdoor Plants
               </Link>
               <Link
                 to="/about"
