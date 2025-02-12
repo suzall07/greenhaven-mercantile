@@ -1,11 +1,52 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await signInWithEmail(email, password);
+        if (error) throw error;
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      } else {
+        const { error } = await signUpWithEmail(email, password);
+        if (error) throw error;
+        toast({
+          title: "Welcome to GreenHaven!",
+          description: "Your account has been created successfully.",
+        });
+      }
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -18,13 +59,18 @@ const Auth = () => {
           </h1>
           
           <div className="glass-panel p-6 rounded-lg animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {!isLogin && (
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-2">
                     Name
                   </label>
-                  <Input id="name" placeholder="Your name" />
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                  />
                 </div>
               )}
               
@@ -32,18 +78,30 @@ const Auth = () => {
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
                   Email
                 </label>
-                <Input id="email" type="email" placeholder="your@email.com" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                />
               </div>
               
               <div>
                 <label htmlFor="password" className="block text-sm font-medium mb-2">
                   Password
                 </label>
-                <Input id="password" type="password" placeholder="••••••••" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
               </div>
               
-              <Button className="w-full">
-                {isLogin ? "Sign In" : "Sign Up"}
+              <Button className="w-full" disabled={isLoading}>
+                {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
               </Button>
             </form>
 

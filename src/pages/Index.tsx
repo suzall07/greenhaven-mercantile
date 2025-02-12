@@ -1,31 +1,53 @@
 
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
+import { getProducts, addToCart, supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Monstera Deliciosa",
-      price: 39.99,
-      image: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&q=80&w=400",
-      category: "Plants",
-    },
-    {
-      id: 2,
-      name: "Ceramic Plant Pot",
-      price: 24.99,
-      image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&q=80&w=400",
-      category: "Decor",
-    },
-    {
-      id: 3,
-      name: "Snake Plant",
-      price: 29.99,
-      image: "https://images.unsplash.com/photo-1593691509543-c55fb32e7caa?auto=format&fit=crop&q=80&w=400",
-      category: "Plants",
-    },
-  ];
+  const { toast } = useToast();
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+  });
+
+  const handleAddToCart = async (productId: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to add items to cart",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await addToCart(user.id, productId, 1);
+      toast({
+        title: "Added to cart",
+        description: "Item has been added to your cart",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,7 +75,7 @@ const Index = () => {
             Featured Products
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
+            {products?.map((product, index) => (
               <div
                 key={product.id}
                 className="product-card"
@@ -70,7 +92,12 @@ const Index = () => {
                   </span>
                   <h3 className="text-lg font-semibold">{product.name}</h3>
                   <p className="text-primary font-medium">${product.price}</p>
-                  <Button className="w-full">Add to Cart</Button>
+                  <Button 
+                    className="w-full"
+                    onClick={() => handleAddToCart(product.id)}
+                  >
+                    Add to Cart
+                  </Button>
                 </div>
               </div>
             ))}
