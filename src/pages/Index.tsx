@@ -63,18 +63,6 @@ const Index = () => {
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             Discover the perfect blend of nature and style
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/indoor-plants">
-              <Button variant="default" className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-                Indoor Plants
-              </Button>
-            </Link>
-            <Link to="/outdoor-plants">
-              <Button variant="outline" className="animate-fadeIn" style={{ animationDelay: "0.4s" }}>
-                Outdoor Plants
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 
