@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import IndoorPlants from "./pages/IndoorPlants";
 import OutdoorPlants from "./pages/OutdoorPlants";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,8 +24,8 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <TooltipProvider>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -33,13 +34,14 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
           <Sonner />
         </TooltipProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
