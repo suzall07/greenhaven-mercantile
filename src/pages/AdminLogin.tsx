@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
+const ADMIN_EMAIL = 'sujalkhadgi13@gmail.com';
+
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(ADMIN_EMAIL);
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,15 +20,25 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
+      // Validate email first
+      if (email !== ADMIN_EMAIL) {
+        throw new Error('Only the admin email is allowed');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      console.log("Login Response:", { data, error });
 
-      if (data.user?.email !== 'sujalkhadgi13@gmail.com') {
-        throw new Error('Unauthorized access');
+      if (error) {
+        console.error("Supabase Auth Error:", error);
+        throw error;
+      }
+
+      if (!data.user) {
+        throw new Error('Authentication failed');
       }
 
       toast({
@@ -36,9 +48,11 @@ const AdminLogin = () => {
 
       navigate('/admin');
     } catch (error: any) {
+      console.error("Login Error:", error);
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Login Error",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -62,6 +76,7 @@ const AdminLogin = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled
             />
           </div>
 
