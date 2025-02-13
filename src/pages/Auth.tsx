@@ -12,6 +12,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -24,19 +25,38 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signInWithEmail(email, password);
         if (error) throw error;
+
+        // Check if user is admin
+        if (email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98') {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
       } else {
+        // Check if passwords match for signup
+        if (password !== confirmPassword) {
+          toast({
+            title: "Error",
+            description: "Passwords do not match",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         const { error } = await signUpWithEmail(email, password);
         if (error) throw error;
         toast({
           title: "Welcome to GreenHaven!",
           description: "Your account has been created successfully.",
         });
+        navigate("/");
       }
-      navigate("/");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -84,6 +104,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
+                  required
                 />
               </div>
               
@@ -97,8 +118,25 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  required
                 />
               </div>
+
+              {!isLogin && (
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+                    Confirm Password
+                  </label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              )}
               
               <Button className="w-full" disabled={isLoading}>
                 {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
@@ -107,7 +145,11 @@ const Auth = () => {
 
             <div className="mt-6 text-center">
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
                 className="text-sm text-primary hover:underline"
               >
                 {isLogin

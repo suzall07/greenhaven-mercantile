@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -15,9 +14,11 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -28,6 +29,22 @@ const Admin = () => {
     category: "",
     stock: "",
   });
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || user.email !== 'sujalkhadgi13@gmail.com') {
+        toast({
+          title: "Unauthorized",
+          description: "You must be an admin to access this page",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+    };
+    
+    checkAdmin();
+  }, [navigate, toast]);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
