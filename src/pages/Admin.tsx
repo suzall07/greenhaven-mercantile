@@ -20,11 +20,11 @@ const Admin = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
-    image: "",
     category: "",
     stock: "",
   });
@@ -42,6 +42,30 @@ const Admin = () => {
     },
   });
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(e.target.files[0]);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `product-images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -57,10 +81,23 @@ const Admin = () => {
         return;
       }
 
+      if (!selectedImage) {
+        toast({
+          title: "Error",
+          description: "Please select an image",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Upload image first
+      const imageUrl = await uploadImage(selectedImage);
+
       const newProduct = {
         ...formData,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
+        image: imageUrl,
       };
 
       const { error } = await supabase
@@ -78,10 +115,14 @@ const Admin = () => {
         name: "",
         description: "",
         price: "",
-        image: "",
         category: "",
         stock: "",
       });
+      setSelectedImage(null);
+
+      // Reset file input
+      const fileInput = document.getElementById('image') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
 
       queryClient.invalidateQueries({ queryKey: ['products'] });
     } catch (error: any) {
@@ -157,13 +198,23 @@ const Admin = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image">Image URL</Label>
+                <Label htmlFor="image">Product Image</Label>
                 <Input
                   id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
                   required
                 />
+                {selectedImage && (
+                  <div className="mt-2">
+                    <img
+                      src={URL.createObjectURL(selectedImage)}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
