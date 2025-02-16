@@ -2,11 +2,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const IndoorPlants = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
@@ -71,12 +74,21 @@ const IndoorPlants = () => {
                   <h3 className="text-lg font-semibold">{product.name}</h3>
                   <p className="text-muted-foreground">{product.description}</p>
                   <p className="text-primary font-medium">Rs {product.price}</p>
-                  <Button 
-                    className="w-full"
-                    onClick={() => handleAddToCart(product.id)}
-                  >
-                    Add to Cart
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => handleAddToCart(product.id)}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
