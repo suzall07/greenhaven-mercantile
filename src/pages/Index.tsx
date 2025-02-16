@@ -4,6 +4,7 @@ import { Navigation } from "@/components/Navigation";
 import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { LazyImage } from "@/components/LazyImage";
 
 const Index = () => {
   const { toast } = useToast();
@@ -81,13 +82,10 @@ const Index = () => {
                   style={{ animationDelay: `${0.2 * index}s` }}
                 >
                   <div className="mb-4">
-                    <img
+                    <LazyImage
                       src={product.image}
                       alt={product.name}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/placeholder.svg';
-                      }}
+                      className="w-full h-64 object-cover rounded-md"
                     />
                   </div>
                   <div className="space-y-2">
@@ -137,7 +135,6 @@ const Index = () => {
         </section>
       </main>
 
-      {/* Footer */}
       <footer className="py-6 px-4 bg-secondary/10 mt-12">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>

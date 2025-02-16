@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { Product } from "@/lib/supabase";
+import { LazyImage } from "@/components/LazyImage";
 
 interface ProductCardProps {
   product: Product;
@@ -29,14 +30,10 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         </Button>
       </div>
       <div className="w-full h-48 relative bg-gray-100 rounded-md overflow-hidden">
-        <img
+        <LazyImage
           src={product.image || '/placeholder.svg'}
           alt={product.name}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder.svg';
-          }}
         />
       </div>
       <div className="space-y-2 mt-4">

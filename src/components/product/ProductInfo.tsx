@@ -6,6 +6,7 @@ import { initiateKhaltiPayment } from "@/lib/khalti";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { LazyImage } from "@/components/LazyImage";
 
 interface ProductInfoProps {
   product: Product;
@@ -61,7 +62,7 @@ export const ProductInfo = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <img
+        <LazyImage
           src={product.image}
           alt={product.name}
           className="w-full max-w-lg"
