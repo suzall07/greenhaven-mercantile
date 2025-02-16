@@ -14,6 +14,14 @@ export const ProductImageUpload = ({ onImageChange, required = false }: ProductI
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Check if file is an allowed image type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a JPEG, JPG or PNG image.');
+        return;
+      }
+
       setPreviewUrl(URL.createObjectURL(file));
       onImageChange(file);
     }
@@ -21,11 +29,11 @@ export const ProductImageUpload = ({ onImageChange, required = false }: ProductI
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="image">Product Image</Label>
+      <Label htmlFor="image">Product Image (JPEG, JPG, PNG)</Label>
       <Input
         id="image"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/jpg,image/png"
         onChange={handleImageChange}
         required={required}
       />
