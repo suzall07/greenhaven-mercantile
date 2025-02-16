@@ -1,10 +1,8 @@
+
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Star } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import {
@@ -14,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ProductInfo } from "./ProductInfo";
+import { ReviewForm } from "./ReviewForm";
+import { ReviewList } from "./ReviewList";
 
 export const ProductDetails = () => {
   const { productId } = useParams();
@@ -124,7 +125,7 @@ export const ProductDetails = () => {
 
   const averageRating = reviews?.length 
     ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
-    : 0;
+    : "0";
 
   if (isLoadingProduct || isLoadingReviews) {
     return <div>Loading...</div>;
@@ -134,70 +135,25 @@ export const ProductDetails = () => {
     return <div>Product not found</div>;
   }
 
+  const handleBuyNow = () => {
+    addToCartMutation.mutate();
+    navigate('/cart');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
       <div className="container mx-auto px-4 pt-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full rounded-lg object-cover aspect-square"
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">{product.name}</h1>
-              <p className="text-xl font-semibold mt-2">Rs {product.price}</p>
-              <p className="text-muted-foreground mt-4">{product.description}</p>
-            </div>
+        <ProductInfo
+          product={product}
+          averageRating={averageRating}
+          reviewCount={reviews?.length || 0}
+          onAddToCart={() => addToCartMutation.mutate()}
+          onBuyNow={handleBuyNow}
+          isLoading={addToCartMutation.isPending}
+        />
 
-            <div className="flex items-center space-x-2">
-              <span className="text-lg">Rating: {averageRating}</span>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-5 h-5 ${
-                      star <= Number(averageRating)
-                        ? "text-yellow-400 fill-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-muted-foreground">
-                ({reviews?.length || 0} reviews)
-              </span>
-            </div>
-
-            <div className="space-x-4">
-              <Button 
-                size="lg" 
-                onClick={() => addToCartMutation.mutate()}
-                disabled={addToCartMutation.isPending}
-              >
-                Add to Cart
-              </Button>
-              <Button 
-                size="lg" 
-                variant="secondary"
-                onClick={() => {
-                  addToCartMutation.mutate();
-                  navigate('/cart');
-                }}
-                disabled={addToCartMutation.isPending}
-              >
-                Buy Now
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Reviews Section */}
         <div className="mt-12">
           <Card>
             <CardHeader>
@@ -205,65 +161,15 @@ export const ProductDetails = () => {
               <CardDescription>Share your thoughts about this product</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-6 h-6 cursor-pointer ${
-                        star <= rating
-                          ? "text-yellow-400 fill-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                      onClick={() => setRating(star)}
-                    />
-                  ))}
-                </div>
-                <Textarea
-                  placeholder="Write your review..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  className="mb-2"
-                />
-                <Button 
-                  onClick={() => addReviewMutation.mutate()}
-                  disabled={!rating || !comment || addReviewMutation.isPending}
-                >
-                  Submit Review
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {reviews?.map((review) => (
-                  <Card key={review.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${
-                                star <= review.rating
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(review.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{review.comment}</p>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {review.profiles?.email}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <ReviewForm
+                rating={rating}
+                comment={comment}
+                onRatingChange={setRating}
+                onCommentChange={setComment}
+                onSubmit={() => addReviewMutation.mutate()}
+                isSubmitting={addReviewMutation.isPending}
+              />
+              <ReviewList reviews={reviews || []} />
             </CardContent>
           </Card>
         </div>
