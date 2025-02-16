@@ -1,24 +1,15 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { supabase, Product } from "@/lib/supabase";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { ProductCard } from "./ProductCard";
+import { EditProductDialog } from "./EditProductDialog";
 
 export const ProductList = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const { data: products, isLoading } = useQuery({
@@ -34,7 +25,7 @@ export const ProductList = () => {
     },
   });
 
-  const handleEdit = (product: any) => {
+  const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setIsEditDialogOpen(true);
   };
@@ -66,6 +57,8 @@ export const ProductList = () => {
   };
 
   const handleSaveEdit = async () => {
+    if (!editingProduct) return;
+
     try {
       const { error } = await supabase
         .from('products')
@@ -105,130 +98,23 @@ export const ProductList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {products?.map((product) => (
-            <div
+            <ProductCard
               key={product.id}
-              className="bg-card p-4 rounded-lg shadow-sm relative group"
-            >
-              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleEdit(product)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDelete(product.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="w-full h-48 relative">
-                <img
-                  src={product.image || '/placeholder.svg'}
-                  alt={product.name}
-                  className="w-full h-full object-cover rounded-md"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder.svg';
-                  }}
-                />
-              </div>
-              <div className="space-y-2 mt-4">
-                <h3 className="font-semibold">{product.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Category: {product.category}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Price: Rs {product.price}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Stock: {product.stock}
-                </p>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {product.description}
-                </p>
-              </div>
-            </div>
+              product={product}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-          </DialogHeader>
-          {editingProduct && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input
-                  value={editingProduct.name}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Category</label>
-                <Input
-                  value={editingProduct.category}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, category: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Price</label>
-                <Input
-                  type="number"
-                  value={editingProduct.price}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, price: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Stock</label>
-                <Input
-                  type="number"
-                  value={editingProduct.stock}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, stock: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Image URL</label>
-                <Input
-                  value={editingProduct.image}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, image: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  value={editingProduct.description}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, description: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditProductDialog
+        product={editingProduct}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSave={handleSaveEdit}
+        onProductChange={setEditingProduct}
+      />
     </div>
   );
 };
