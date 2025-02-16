@@ -47,7 +47,7 @@ export const ReviewList = ({ reviews }: ReviewListProps) => {
           <CardContent>
             <p>{review.comment}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {review.profiles?.email}
+              {review.profiles?.email || 'Anonymous'}
             </p>
           </CardContent>
         </Card>

@@ -43,7 +43,12 @@ export const ProductDetails = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_reviews')
-        .select('*, profiles:user_id(email)')
+        .select(`
+          *,
+          profiles (
+            email
+          )
+        `)
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
       
