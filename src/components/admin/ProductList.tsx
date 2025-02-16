@@ -54,7 +54,6 @@ export const ProductList = () => {
           description: "The product has been deleted successfully.",
         });
 
-        // Refresh products list
         queryClient.invalidateQueries({ queryKey: ['products'] });
       } catch (error) {
         toast({
@@ -126,12 +125,18 @@ export const ProductList = () => {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-48 object-cover rounded-md mb-4"
-              />
-              <div className="space-y-2">
+              <div className="w-full h-48 relative">
+                <img
+                  src={product.image || '/placeholder.svg'}
+                  alt={product.name}
+                  className="w-full h-full object-cover rounded-md"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
+                />
+              </div>
+              <div className="space-y-2 mt-4">
                 <h3 className="font-semibold">{product.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   Category: {product.category}
