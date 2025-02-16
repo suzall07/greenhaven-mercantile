@@ -80,15 +80,17 @@ const Index = () => {
                 className="product-card hover:shadow-md transition-shadow"
                 style={{ animationDelay: `${0.2 * index}s` }}
               >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-64 object-cover rounded-md mb-4"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder.svg'; // Fallback image
-                  }}
-                />
+                <div className="aspect-square mb-4 overflow-hidden rounded-md bg-muted">
+                  <img
+                    src={product.image || '/placeholder.svg'}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">
                     {product.category}
