@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Star, StarHalf } from "lucide-react";
+import { Star } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -44,10 +43,7 @@ export const ProductDetails = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_reviews')
-        .select(`
-          *,
-          user:auth.users(email)
-        `)
+        .select('*, profiles:user_id(email)')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
       
@@ -262,6 +258,9 @@ export const ProductDetails = () => {
                     </CardHeader>
                     <CardContent>
                       <p>{review.comment}</p>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {review.profiles?.email}
+                      </p>
                     </CardContent>
                   </Card>
                 ))}
