@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
@@ -74,9 +73,10 @@ const Index = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {products?.slice(0, 3).map((product, index) => (
-              <div
+              <Link
                 key={product.id}
-                className="product-card"
+                to={`/product/${product.id}`}
+                className="product-card hover:shadow-md transition-shadow"
                 style={{ animationDelay: `${0.2 * index}s` }}
               >
                 <img
@@ -89,15 +89,9 @@ const Index = () => {
                     {product.category}
                   </span>
                   <h3 className="text-lg font-semibold">{product.name}</h3>
-                  <p className="text-primary font-medium">${product.price}</p>
-                  <Button 
-                    className="w-full"
-                    onClick={() => handleAddToCart(product.id)}
-                  >
-                    Add to Cart
-                  </Button>
+                  <p className="text-primary font-medium">Rs {product.price}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="text-center mt-8">
