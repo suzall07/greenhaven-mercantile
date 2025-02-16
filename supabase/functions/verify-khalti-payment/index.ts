@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const pidx = req.url.split('/').pop();
+    const { pidx } = await req.json();
     const khaltiSecretKey = Deno.env.get('KHALTI_SECRET_KEY');
 
     if (!khaltiSecretKey) {

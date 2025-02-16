@@ -13,21 +13,14 @@ interface KhaltiPaymentInput {
 
 export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
   try {
-    const response = await fetch('/api/khalti-payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add Supabase auth header to validate the user
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-      },
-      body: JSON.stringify(input)
+    // Use Supabase Functions.invoke instead of fetch
+    const { data, error } = await supabase.functions.invoke('khalti-payment', {
+      body: input
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to initiate payment');
+    if (error) {
+      throw error;
     }
-
-    const data = await response.json();
     
     // Open Khalti payment widget in a new window
     const khaltiWindow = window.open(data.payment_url, 'Khalti Payment', 'width=500,height=600');
@@ -38,18 +31,20 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
         try {
           if (khaltiWindow.closed) {
             clearInterval(checkPayment);
-            // Verify payment status
-            const verifyResponse = await fetch(`/api/verify-khalti-payment/${data.pidx}`, {
-              headers: {
-                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            // Verify payment status using Supabase Functions.invoke
+            const { data: verificationData, error: verifyError } = await supabase.functions.invoke(
+              'verify-khalti-payment',
+              {
+                body: { pidx: data.pidx }
               }
-            });
+            );
             
-            if (verifyResponse.ok) {
-              const verificationData = await verifyResponse.json();
-              if (verificationData.status === 'Completed') {
-                return verificationData;
-              }
+            if (verifyError) {
+              throw verifyError;
+            }
+            
+            if (verificationData.status === 'Completed') {
+              return verificationData;
             }
           }
         } catch (error) {
