@@ -46,10 +46,10 @@ const IndoorPlants = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
-      <div className="container mx-auto px-4 pt-24">
+      <div className="container mx-auto px-4 pt-24 flex-grow">
         <h1 className="text-3xl md:text-4xl font-bold mb-6 animate-fadeIn">Indoor Plants</h1>
         
         {isLoading ? (
@@ -95,6 +95,12 @@ const IndoorPlants = () => {
           </div>
         )}
       </div>
+
+      <footer className="py-6 px-4 bg-secondary/10 mt-12">
+        <div className="container mx-auto text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };

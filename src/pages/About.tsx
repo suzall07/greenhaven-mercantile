@@ -3,10 +3,10 @@ import { Navigation } from "@/components/Navigation";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
-      <div className="container mx-auto px-4 pt-24">
+      <div className="container mx-auto px-4 pt-24 flex-grow">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold mb-8 animate-fadeIn">About GreenHaven</h1>
           
@@ -28,6 +28,12 @@ const About = () => {
           </div>
         </div>
       </div>
+
+      <footer className="py-6 px-4 bg-secondary/10 mt-12">
+        <div className="container mx-auto text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
