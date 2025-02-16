@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const KHALTI_API_URL = "https://khalti.com/api/v2/payment/initiate/";
+const KHALTI_API_URL = "https://a.khalti.com/api/v2/epayment/initiate/";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +28,17 @@ serve(async (req) => {
 
     console.log('Initiating Khalti payment:', { amount, purchaseOrderId, purchaseOrderName });
 
+    const payload = {
+      return_url: `${req.headers.get('origin')}/payment-success`,
+      website_url: req.headers.get('origin'),
+      amount: amount * 100, // Convert to paisa
+      purchase_order_id: purchaseOrderId,
+      purchase_order_name: purchaseOrderName,
+      customer_info: customerInfo,
+    };
+
+    console.log('Khalti request payload:', payload);
+
     // Initiate payment with Khalti
     const response = await fetch(KHALTI_API_URL, {
       method: 'POST',
@@ -35,21 +46,15 @@ serve(async (req) => {
         'Authorization': `Key ${khaltiSecretKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        return_url: `${req.headers.get('origin')}/payment-success`,
-        website_url: req.headers.get('origin'),
-        amount: amount * 100, // Convert to paisa
-        purchase_order_id: purchaseOrderId,
-        purchase_order_name: purchaseOrderName,
-        customer_info: customerInfo,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
     console.log('Khalti API response:', data);
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to initiate payment');
+      console.error('Khalti error details:', data);
+      throw new Error(data.detail || data.message || 'Failed to initiate payment');
     }
 
     return new Response(JSON.stringify(data), {

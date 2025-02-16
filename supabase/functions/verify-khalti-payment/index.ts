@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const KHALTI_VERIFY_URL = "https://khalti.com/api/v2/payment/verify/";
+const KHALTI_VERIFY_URL = "https://a.khalti.com/api/v2/epayment/lookup/";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,7 +42,8 @@ serve(async (req) => {
     console.log('Khalti verification response:', data);
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to verify payment');
+      console.error('Khalti verification error details:', data);
+      throw new Error(data.detail || data.message || 'Failed to verify payment');
     }
 
     return new Response(JSON.stringify(data), {
