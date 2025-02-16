@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
@@ -51,90 +50,99 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-12 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn">
-            Welcome to Plant&deco
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-            Discover the perfect blend of nature and style
-          </p>
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
-            Featured Products
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {products?.slice(0, 3).map((product, index) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.id}`}
-                className="product-card hover:shadow-md transition-shadow"
-                style={{ animationDelay: `${0.2 * index}s` }}
-              >
-                <div className="mb-4">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder.svg';
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <span className="text-sm text-muted-foreground">
-                    {product.category}
-                  </span>
-                  <h3 className="text-lg font-semibold">{product.name}</h3>
-                  <p className="text-primary font-medium">Rs {product.price}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link to="/indoor-plants">
-              <Button variant="outline">View All Products</Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section className="py-12 px-4 bg-secondary/10">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">About Plant&deco</h2>
-            <p className="text-muted-foreground mb-6">
-              At Plant&deco, we believe in bringing the beauty and tranquility of nature into your living spaces. Our carefully curated collection of plants helps you create your perfect indoor or outdoor sanctuary.
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="pt-24 pb-12 px-4">
+          <div className="container mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn">
+              Welcome to Plant&deco
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+              Discover the perfect blend of nature and style
             </p>
-            <Link to="/about">
-              <Button variant="link">Learn More About Us</Button>
+          </div>
+        </section>
+
+        {/* Featured Products */}
+        <section className="py-12 px-4">
+          <div className="container mx-auto">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
+              Featured Products
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {products?.slice(0, 3).map((product, index) => (
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  className="product-card hover:shadow-md transition-shadow"
+                  style={{ animationDelay: `${0.2 * index}s` }}
+                >
+                  <div className="mb-4">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder.svg';
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">
+                      {product.category}
+                    </span>
+                    <h3 className="text-lg font-semibold">{product.name}</h3>
+                    <p className="text-primary font-medium">Rs {product.price}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link to="/indoor-plants">
+                <Button variant="outline">View All Products</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section className="py-12 px-4 bg-secondary/10">
+          <div className="container mx-auto">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl md:text-3xl font-semibold mb-4">About Plant&deco</h2>
+              <p className="text-muted-foreground mb-6">
+                At Plant&deco, we believe in bringing the beauty and tranquility of nature into your living spaces. Our carefully curated collection of plants helps you create your perfect indoor or outdoor sanctuary.
+              </p>
+              <Link to="/about">
+                <Button variant="link">Learn More About Us</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact CTA */}
+        <section className="py-12 px-4">
+          <div className="container mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">Need Help?</h2>
+            <p className="text-muted-foreground mb-6">
+              Our plant experts are here to help you choose the perfect plants for your space.
+            </p>
+            <Link to="/contact">
+              <Button>Contact Us</Button>
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* Contact CTA */}
-      <section className="py-12 px-4">
-        <div className="container mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-4">Need Help?</h2>
-          <p className="text-muted-foreground mb-6">
-            Our plant experts are here to help you choose the perfect plants for your space.
-          </p>
-          <Link to="/contact">
-            <Button>Contact Us</Button>
-          </Link>
+      {/* Footer */}
+      <footer className="py-6 px-4 bg-secondary/10 mt-12">
+        <div className="container mx-auto text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>
         </div>
-      </section>
+      </footer>
     </div>
   );
 };
