@@ -10,6 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 interface EditProductDialogProps {
   product: Product | null;
@@ -26,7 +29,36 @@ export const EditProductDialog = ({
   onSave,
   onProductChange,
 }: EditProductDialogProps) => {
+  const [newImage, setNewImage] = useState<File | null>(null);
+
   if (!product) return null;
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewImage(file);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `product-images/${fileName}`;
+
+      try {
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        onProductChange({ ...product, image: publicUrl });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -36,7 +68,7 @@ export const EditProductDialog = ({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
+            <Label>Name</Label>
             <Input
               value={product.name}
               onChange={(e) =>
@@ -45,7 +77,7 @@ export const EditProductDialog = ({
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Category</label>
+            <Label>Category</Label>
             <Input
               value={product.category}
               onChange={(e) =>
@@ -54,7 +86,7 @@ export const EditProductDialog = ({
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Price</label>
+            <Label>Price</Label>
             <Input
               type="number"
               value={product.price}
@@ -64,7 +96,7 @@ export const EditProductDialog = ({
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Stock</label>
+            <Label>Stock</Label>
             <Input
               type="number"
               value={product.stock}
@@ -74,16 +106,28 @@ export const EditProductDialog = ({
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Image URL</label>
-            <Input
-              value={product.image}
-              onChange={(e) =>
-                onProductChange({ ...product, image: e.target.value })
-              }
-            />
+            <Label>Product Image</Label>
+            <div className="space-y-2">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              <div className="w-32 h-32 relative bg-gray-100 rounded-md overflow-hidden">
+                <img
+                  src={product.image || '/placeholder.svg'}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
+                />
+              </div>
+            </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <Label>Description</Label>
             <Textarea
               value={product.description}
               onChange={(e) =>

@@ -12,7 +12,7 @@ interface ProductCardProps {
 export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
   return (
     <div className="bg-card p-4 rounded-lg shadow-sm relative group">
-      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <Button
           variant="outline"
           size="icon"
@@ -28,11 +28,11 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-      <div className="w-full h-48 relative">
+      <div className="w-full h-48 relative bg-gray-100 rounded-md overflow-hidden">
         <img
           src={product.image || '/placeholder.svg'}
           alt={product.name}
-          className="w-full h-full object-cover rounded-md"
+          className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder.svg';
