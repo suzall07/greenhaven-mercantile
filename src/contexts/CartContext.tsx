@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { CartItem } from "@/lib/supabase";
+import { CartItem, getCartItems } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 interface CartContextType {
