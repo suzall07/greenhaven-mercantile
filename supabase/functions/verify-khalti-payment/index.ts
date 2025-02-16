@@ -6,12 +6,16 @@ const KHALTI_VERIFY_URL = "https://khalti.com/api/v2/payment/verify/";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
@@ -21,6 +25,8 @@ serve(async (req) => {
     if (!khaltiSecretKey) {
       throw new Error('Khalti secret key not configured');
     }
+
+    console.log('Verifying Khalti payment:', { pidx });
 
     // Verify payment with Khalti
     const response = await fetch(KHALTI_VERIFY_URL, {
@@ -33,6 +39,7 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('Khalti verification response:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to verify payment');
@@ -40,8 +47,10 @@ serve(async (req) => {
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
     });
   } catch (error) {
+    console.error('Error in Khalti verification:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

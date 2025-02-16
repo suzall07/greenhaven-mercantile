@@ -6,12 +6,16 @@ const KHALTI_API_URL = "https://khalti.com/api/v2/payment/initiate/";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
@@ -21,6 +25,8 @@ serve(async (req) => {
     if (!khaltiSecretKey) {
       throw new Error('Khalti secret key not configured');
     }
+
+    console.log('Initiating Khalti payment:', { amount, purchaseOrderId, purchaseOrderName });
 
     // Initiate payment with Khalti
     const response = await fetch(KHALTI_API_URL, {
@@ -40,6 +46,7 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('Khalti API response:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to initiate payment');
@@ -47,8 +54,10 @@ serve(async (req) => {
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
     });
   } catch (error) {
+    console.error('Error in Khalti payment:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
