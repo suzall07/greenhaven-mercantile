@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -30,6 +30,23 @@ const Admin = () => {
     category: "",
     stock: "",
   });
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -159,9 +176,14 @@ const Admin = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 pt-24">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6">Admin Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold">Admin Dashboard</h1>
+          <Button variant="ghost" onClick={handleLogout}>
+            <LogOut className="h-5 w-5 mr-2" />
+            Logout
+          </Button>
+        </div>
 
-        {/* Add Product Form */}
         <div className="mb-12 bg-card p-6 rounded-lg shadow-sm">
           <h2 className="text-2xl font-semibold mb-4">Add New Product</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -252,7 +274,6 @@ const Admin = () => {
           </form>
         </div>
 
-        {/* Products List */}
         <div>
           <h2 className="text-2xl font-semibold mb-4">Product List</h2>
           {isLoading ? (

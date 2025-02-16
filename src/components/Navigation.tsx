@@ -1,13 +1,34 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { User, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { SearchComponent } from "./search/SearchComponent";
 import { CartButton } from "./cart/CartButton";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
@@ -43,6 +64,9 @@ export const Navigation = () => {
               <Link to="/auth">
                 <User className="h-5 w-5" />
               </Link>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
 
@@ -103,6 +127,9 @@ export const Navigation = () => {
                   <Link to="/auth">
                     <User className="h-5 w-5" />
                   </Link>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
                 </Button>
               </div>
             </div>
