@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Menu, X, LogOut } from "lucide-react";
@@ -35,7 +34,7 @@ export const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="text-xl font-semibold">
-            GreenHaven
+            Plant&deco
           </Link>
 
           {/* Desktop Navigation */}

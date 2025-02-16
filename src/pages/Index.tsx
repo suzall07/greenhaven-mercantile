@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
@@ -57,7 +58,7 @@ const Index = () => {
       <section className="pt-24 pb-12 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn">
-            Welcome to GreenHaven
+            Welcome to Plant&deco
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             Discover the perfect blend of nature and style
@@ -83,6 +84,10 @@ const Index = () => {
                   src={product.image}
                   alt={product.name}
                   className="w-full h-64 object-cover rounded-md mb-4"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg'; // Fallback image
+                  }}
                 />
                 <div className="space-y-2">
                   <span className="text-sm text-muted-foreground">
@@ -106,9 +111,9 @@ const Index = () => {
       <section className="py-12 px-4 bg-secondary/10">
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-4">About GreenHaven</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">About Plant&deco</h2>
             <p className="text-muted-foreground mb-6">
-              At GreenHaven, we believe in bringing the beauty and tranquility of nature into your living spaces. Our carefully curated collection of plants helps you create your perfect indoor or outdoor sanctuary.
+              At Plant&deco, we believe in bringing the beauty and tranquility of nature into your living spaces. Our carefully curated collection of plants helps you create your perfect indoor or outdoor sanctuary.
             </p>
             <Link to="/about">
               <Button variant="link">Learn More About Us</Button>
