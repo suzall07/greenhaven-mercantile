@@ -80,11 +80,10 @@ const Index = () => {
                 className="product-card hover:shadow-md transition-shadow"
                 style={{ animationDelay: `${0.2 * index}s` }}
               >
-                <div className="aspect-square mb-4 overflow-hidden rounded-md bg-muted">
+                <div className="mb-4">
                   <img
-                    src={product.image || '/placeholder.svg'}
+                    src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform hover:scale-105"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = '/placeholder.svg';
