@@ -60,15 +60,11 @@ export const ProductInfo = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+      <div>
         <img
-          src={product.image || '/placeholder.svg'}
+          src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '/placeholder.svg';
-          }}
+          className="w-full max-w-lg"
         />
       </div>
       
