@@ -193,7 +193,7 @@ const Admin = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">Price (Rs)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -275,7 +275,7 @@ const Admin = () => {
                       Category: {product.category}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Price: ${product.price}
+                      Price: Rs {product.price}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Stock: {product.stock}

@@ -70,7 +70,7 @@ const OutdoorPlants = () => {
                   </span>
                   <h3 className="text-lg font-semibold">{product.name}</h3>
                   <p className="text-muted-foreground">{product.description}</p>
-                  <p className="text-primary font-medium">${product.price}</p>
+                  <p className="text-primary font-medium">Rs {product.price}</p>
                   <Button 
                     className="w-full"
                     onClick={() => handleAddToCart(product.id)}
