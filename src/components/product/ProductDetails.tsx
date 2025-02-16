@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,12 +42,7 @@ export const ProductDetails = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_reviews')
-        .select(`
-          *,
-          profiles (
-            email
-          )
-        `)
+        .select('*, profiles:user_id(email)')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
       
@@ -264,7 +258,7 @@ export const ProductDetails = () => {
                     <CardContent>
                       <p>{review.comment}</p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        {review.profiles?.email || 'Anonymous'}
+                        {review.profiles?.email}
                       </p>
                     </CardContent>
                   </Card>
