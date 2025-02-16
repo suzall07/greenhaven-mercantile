@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { LazyImage } from "@/components/LazyImage";
 
 interface ProductImageUploadProps {
   onImageChange: (file: File) => void;
@@ -39,7 +40,7 @@ export const ProductImageUpload = ({ onImageChange, required = false }: ProductI
       />
       {previewUrl && (
         <div className="mt-2">
-          <img
+          <LazyImage
             src={previewUrl}
             alt="Preview"
             className="w-32 h-32 object-cover rounded-md"
