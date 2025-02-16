@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
 import { updateCartItemQuantity, removeFromCart, supabase } from "@/lib/supabase";
+import { initiateKhaltiPayment } from "@/lib/khalti";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 
@@ -45,6 +46,41 @@ export const CartButton = () => {
     } catch (error: any) {
       toast({
         title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to checkout",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const cartTotal = cartItems.reduce((total, item) => {
+        return total + (item.product.price * item.quantity);
+      }, 0);
+
+      const orderId = `order-${Date.now()}`;
+      await initiateKhaltiPayment({
+        amount: cartTotal,
+        purchaseOrderId: orderId,
+        purchaseOrderName: `Cart Checkout - ${orderId}`,
+        customerInfo: {
+          name: user.email?.split('@')[0] || 'Customer',
+          email: user.email || '',
+        },
+      });
+    } catch (error: any) {
+      toast({
+        title: "Payment Error",
         description: error.message,
         variant: "destructive",
       });
@@ -123,8 +159,11 @@ export const CartButton = () => {
                   <span>Total:</span>
                   <span>Rs {cartTotal.toFixed(2)}</span>
                 </div>
-                <Button className="w-full mt-4">
-                  Checkout
+                <Button 
+                  className="w-full mt-4"
+                  onClick={handleCheckout}
+                >
+                  Checkout with Khalti
                 </Button>
               </div>
             </>

@@ -2,6 +2,10 @@
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/supabase";
+import { initiateKhaltiPayment } from "@/lib/khalti";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ProductInfoProps {
   product: Product;
@@ -17,9 +21,43 @@ export const ProductInfo = ({
   averageRating,
   reviewCount,
   onAddToCart,
-  onBuyNow,
   isLoading,
 }: ProductInfoProps) => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleBuyNow = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to make a purchase",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+
+      const orderId = `order-${Date.now()}`;
+      await initiateKhaltiPayment({
+        amount: product.price,
+        purchaseOrderId: orderId,
+        purchaseOrderName: `Purchase - ${product.name}`,
+        customerInfo: {
+          name: user.email?.split('@')[0] || 'Customer',
+          email: user.email || '',
+        },
+      });
+    } catch (error: any) {
+      toast({
+        title: "Payment Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
@@ -67,10 +105,10 @@ export const ProductInfo = ({
           <Button 
             size="lg" 
             variant="secondary"
-            onClick={onBuyNow}
+            onClick={handleBuyNow}
             disabled={isLoading}
           >
-            Buy Now
+            Buy Now with Khalti
           </Button>
         </div>
       </div>
