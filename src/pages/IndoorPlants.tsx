@@ -6,6 +6,7 @@ import { Eye } from "lucide-react";
 import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { LazyImage } from "@/components/LazyImage";
 
 const IndoorPlants = () => {
   const { toast } = useToast();
@@ -62,7 +63,7 @@ const IndoorPlants = () => {
                 className="product-card"
                 style={{ animationDelay: `${0.2 * index}s` }}
               >
-                <img
+                <LazyImage
                   src={product.image}
                   alt={product.name}
                   className="w-full h-64 object-cover rounded-md mb-4"
