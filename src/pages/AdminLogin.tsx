@@ -6,10 +6,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-const ADMIN_EMAIL = 'sujalkhadgi13@gmail.com';
-
 const AdminLogin = () => {
-  const [email, setEmail] = useState(ADMIN_EMAIL);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,25 +18,32 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Validate email first
-      if (email !== ADMIN_EMAIL) {
-        throw new Error('Only the admin email is allowed');
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log("Login Response:", { data, error });
-
       if (error) {
-        console.error("Supabase Auth Error:", error);
         throw error;
       }
 
       if (!data.user) {
         throw new Error('Authentication failed');
+      }
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (roleError) {
+        throw new Error('Failed to verify admin status');
+      }
+
+      if (roleData?.role !== 'admin') {
+        throw new Error('Access denied. Admin privileges required.');
       }
 
       toast({
@@ -76,7 +81,6 @@ const AdminLogin = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled
             />
           </div>
 
@@ -104,3 +108,4 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
+
