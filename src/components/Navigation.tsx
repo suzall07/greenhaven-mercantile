@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, User, Menu, X } from "lucide-react";
@@ -14,6 +13,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -21,6 +21,7 @@ export const Navigation = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { refetchCart } = useCart();
 
   const { data: products } = useQuery({
     queryKey: ['products'],
@@ -46,6 +47,7 @@ export const Navigation = () => {
       }
 
       await addToCart(user.id, productId, 1);
+      await refetchCart();
       toast({
         title: "Added to cart",
         description: "Item has been added to your cart",

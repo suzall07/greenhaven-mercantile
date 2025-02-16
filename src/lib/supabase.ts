@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://qjxhtllsaevjfhlfqnvu.supabase.co';
@@ -69,26 +68,32 @@ export async function getCartItems(userId: string) {
 }
 
 export async function addToCart(userId: string, productId: number, quantity: number) {
-  const { data: existingItem } = await supabase
+  const { data: existingItem, error: fetchError } = await supabase
     .from('cart_items')
-    .select()
+    .select('*')
     .eq('user_id', userId)
     .eq('product_id', productId)
-    .single();
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
 
   if (existingItem) {
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('cart_items')
       .update({ quantity: existingItem.quantity + quantity })
       .eq('id', existingItem.id);
     
-    if (error) throw error;
+    if (updateError) throw updateError;
   } else {
-    const { error } = await supabase
+    const { error: insertError } = await supabase
       .from('cart_items')
-      .insert([{ user_id: userId, product_id: productId, quantity }]);
+      .insert([{ 
+        user_id: userId, 
+        product_id: productId, 
+        quantity 
+      }]);
     
-    if (error) throw error;
+    if (insertError) throw insertError;
   }
 }
 
