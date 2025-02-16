@@ -5,26 +5,26 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 60 30% 98%;
-    --foreground: 60 10% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 60 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 60 10% 10%;
-    --muted: 60 5% 96%;
-    --muted-foreground: 60 5% 65%;
-    --accent: 60 5% 96%;
-    --accent-foreground: 60 10% 10%;
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 60 10% 98%;
-    --border: 60 5% 90%;
-    --input: 60 5% 90%;
-    --ring: 60 5% 50%;
-    --radius: 0.5rem;
-  }
+:root {
+  --background: 60 30% 98%;
+  --foreground: 60 10% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 60 10% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 60 10% 10%;
+  --muted: 60 5% 96%;
+  --muted-foreground: 60 5% 65%;
+  --accent: 60 5% 96%;
+  --accent-foreground: 60 10% 10%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 60 10% 98%;
+  --border: 60 5% 90%;
+  --input: 60 5% 90%;
+  --ring: 60 5% 50%;
+  --radius: 0.5rem;
+}
 
+@layer base {
   * {
     @apply border-border;
   }
