@@ -9,19 +9,16 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   }
 
   try {
-    // Create a clean filename with timestamp to avoid duplicates
-    const timestamp = new Date().getTime();
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-    const fileExt = cleanFileName.split('.').pop()?.toLowerCase();
-    const fileName = `${timestamp}-${cleanFileName}`;
+    // Create a unique filename
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
     // Upload the file to Supabase storage
-    const { error: uploadError, data } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('products')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: true,
-        contentType: file.type
+        upsert: true
       });
 
     if (uploadError) {
@@ -29,7 +26,7 @@ export const uploadProductImage = async (file: File): Promise<string> => {
       throw uploadError;
     }
 
-    // Get the public URL
+    // Get the public URL using the new path
     const { data: { publicUrl } } = supabase.storage
       .from('products')
       .getPublicUrl(fileName);
@@ -38,7 +35,9 @@ export const uploadProductImage = async (file: File): Promise<string> => {
       throw new Error('Failed to get public URL for uploaded image');
     }
 
-    console.log('Upload successful, public URL:', publicUrl);
+    console.log('Successfully uploaded image:', fileName);
+    console.log('Public URL:', publicUrl);
+    
     return publicUrl;
   } catch (error: any) {
     console.error('Upload error:', error);
