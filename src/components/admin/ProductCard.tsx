@@ -35,8 +35,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e: any) => {
-            console.error('Image load error:', product.image);
-            e.target.src = '/placeholder.svg';
+            console.error('Image load error in ProductCard:', product.image);
           }}
         />
       </div>

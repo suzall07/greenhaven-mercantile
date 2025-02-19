@@ -8,29 +8,31 @@ export const uploadProductImage = async (file: File): Promise<string> => {
     throw new Error('File type not supported. Please upload a JPEG, JPG or PNG image.');
   }
 
-  // Create a clean filename with timestamp to avoid duplicates
-  const timestamp = new Date().getTime();
-  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-  const fileExt = cleanFileName.split('.').pop()?.toLowerCase();
-  const fileName = `${timestamp}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `${fileName}`;
-
   try {
+    // Create a clean filename with timestamp to avoid duplicates
+    const timestamp = new Date().getTime();
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+    const fileExt = cleanFileName.split('.').pop()?.toLowerCase();
+    const fileName = `${timestamp}-${cleanFileName}`;
+
     // Upload the file to Supabase storage
     const { error: uploadError, data } = await supabase.storage
       .from('products')
-      .upload(filePath, file, {
+      .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false,
+        upsert: true,
         contentType: file.type
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
 
     // Get the public URL
     const { data: { publicUrl } } = supabase.storage
       .from('products')
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
     if (!publicUrl) {
       throw new Error('Failed to get public URL for uploaded image');

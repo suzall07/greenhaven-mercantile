@@ -16,6 +16,7 @@ export const LazyImage = ({ src, alt, className, ...props }: LazyImageProps) => 
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Image load error for:', src);
     setIsLoading(false);
     setHasError(true);
     const target = e.target as HTMLImageElement;
@@ -34,6 +35,7 @@ export const LazyImage = ({ src, alt, className, ...props }: LazyImageProps) => 
         className={`${className} ${isLoading ? 'hidden' : ''}`}
         onLoad={handleLoad}
         onError={handleError}
+        loading="lazy"
         {...props}
       />
     </div>
