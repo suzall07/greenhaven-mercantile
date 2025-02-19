@@ -1,49 +1,41 @@
 
-import { useState, useEffect } from "react";
+import { useState } from 'react';
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface LazyImageProps {
+interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
-  className?: string;
-  placeholderSrc?: string;
 }
 
-export const LazyImage = ({ 
-  src, 
-  alt, 
-  className = "", 
-  placeholderSrc = "/placeholder.svg" 
-}: LazyImageProps) => {
-  const [imageSrc, setImageSrc] = useState(placeholderSrc);
+export const LazyImage = ({ src, alt, className, ...props }: LazyImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    const img = new Image();
-    img.src = src;
-    img.onload = () => {
-      setImageSrc(src);
-      setIsLoading(false);
-    };
-    img.onerror = () => {
-      setImageSrc(placeholderSrc);
-      setIsLoading(false);
-    };
-  }, [src, placeholderSrc]);
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    setIsLoading(false);
+    setHasError(true);
+    const target = e.target as HTMLImageElement;
+    target.src = '/placeholder.svg';
+    if (props.onError) {
+      props.onError(e);
+    }
+  };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={className}>
+      {isLoading && <Skeleton className="w-full h-full" />}
       <img
-        src={imageSrc}
+        src={hasError ? '/placeholder.svg' : src}
         alt={alt}
-        className={`${className} transition-opacity duration-300 ${
-          isLoading ? "opacity-50" : "opacity-100"
-        }`}
+        className={`${className} ${isLoading ? 'hidden' : ''}`}
+        onLoad={handleLoad}
+        onError={handleError}
+        {...props}
       />
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
     </div>
   );
 };

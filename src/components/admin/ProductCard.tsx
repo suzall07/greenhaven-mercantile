@@ -31,9 +31,13 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       </div>
       <div className="w-full h-48 relative bg-gray-100 rounded-md overflow-hidden">
         <LazyImage
-          src={product.image || '/placeholder.svg'}
+          src={product.image}
           alt={product.name}
           className="w-full h-full object-cover"
+          onError={(e: any) => {
+            console.error('Image load error:', product.image);
+            e.target.src = '/placeholder.svg';
+          }}
         />
       </div>
       <div className="space-y-2 mt-4">

@@ -8,19 +8,38 @@ export const uploadProductImage = async (file: File): Promise<string> => {
     throw new Error('File type not supported. Please upload a JPEG, JPG or PNG image.');
   }
 
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `product-images/${fileName}`;
+  // Create a clean filename with timestamp to avoid duplicates
+  const timestamp = new Date().getTime();
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+  const fileExt = cleanFileName.split('.').pop()?.toLowerCase();
+  const fileName = `${timestamp}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+  const filePath = `${fileName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('products')
-    .upload(filePath, file);
+  try {
+    // Upload the file to Supabase storage
+    const { error: uploadError, data } = await supabase.storage
+      .from('products')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type
+      });
 
-  if (uploadError) throw uploadError;
+    if (uploadError) throw uploadError;
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('products')
-    .getPublicUrl(filePath);
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
 
-  return publicUrl;
+    if (!publicUrl) {
+      throw new Error('Failed to get public URL for uploaded image');
+    }
+
+    console.log('Upload successful, public URL:', publicUrl);
+    return publicUrl;
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    throw new Error(`Failed to upload image: ${error.message}`);
+  }
 };
