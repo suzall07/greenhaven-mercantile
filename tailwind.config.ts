@@ -24,7 +24,7 @@ export default {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        foreground: "#2C4A3B", // Changed to deep forest green
         primary: {
           DEFAULT: "#2C4A3B", // Deep forest green
           foreground: "#FDFBF9", // Light cream
@@ -77,3 +77,4 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
