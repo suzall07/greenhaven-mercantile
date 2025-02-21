@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
@@ -137,7 +138,7 @@ const Index = () => {
 
       <footer className="py-6 px-4 bg-secondary/10 mt-12">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Plant&deco. All rights reserved.</p>
         </div>
       </footer>
     </div>
