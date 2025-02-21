@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -6,21 +5,21 @@
 @tailwind utilities;
 
 :root {
-  --background: 60 30% 98%;
-  --foreground: 60 10% 10%;
+  --background: 34 25% 95%;
+  --foreground: 34 10% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 60 10% 10%;
+  --card-foreground: 34 10% 15%;
   --popover: 0 0% 100%;
-  --popover-foreground: 60 10% 10%;
-  --muted: 60 5% 96%;
-  --muted-foreground: 60 5% 65%;
-  --accent: 60 5% 96%;
-  --accent-foreground: 60 10% 10%;
+  --popover-foreground: 34 10% 15%;
+  --muted: 34 5% 96%;
+  --muted-foreground: 34 5% 65%;
+  --accent: 34 5% 96%;
+  --accent-foreground: 34 10% 15%;
   --destructive: 0 85% 60%;
-  --destructive-foreground: 60 10% 98%;
-  --border: 60 5% 90%;
-  --input: 60 5% 90%;
-  --ring: 60 5% 50%;
+  --destructive-foreground: 34 10% 98%;
+  --border: 34 5% 90%;
+  --input: 34 5% 90%;
+  --ring: 34 5% 50%;
   --radius: 0.5rem;
 }
 
