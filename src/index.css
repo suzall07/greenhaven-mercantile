@@ -30,7 +30,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-['Inter'] bg-gradient-to-br from-[#f8f7f3] via-[#f0f2ed] to-[#f5f2ef];
+    @apply bg-background text-foreground font-['Inter'] bg-gradient-to-br from-[#f2f5ed] via-[#e8efe6] to-[#f5f2ef];
   }
 }
 
