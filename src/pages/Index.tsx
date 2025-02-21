@@ -6,6 +6,31 @@ import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+const heroSlides = [
+  {
+    image: "https://images.unsplash.com/photo-1518495973542-4542c06a5843",
+    quote: "Bring nature indoors, transform your space.",
+    author: "Plant&deco"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",
+    quote: "Every plant has a story to tell.",
+    author: "Plant&deco"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
+    quote: "Where nature meets design.",
+    author: "Plant&deco"
+  }
+];
 
 const Index = () => {
   const { toast } = useToast();
@@ -56,19 +81,38 @@ const Index = () => {
       <Navigation />
       
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="pt-24 pb-12 px-4">
-          <div className="container mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeIn">
-              Welcome to Plant&deco
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-              Discover the perfect blend of nature and style
-            </p>
-          </div>
+        {/* Hero Section with Carousel */}
+        <section className="relative w-full h-[600px] overflow-hidden">
+          <Carousel className="w-full h-full" opts={{ loop: true }}>
+            <CarouselContent>
+              {heroSlides.map((slide, index) => (
+                <CarouselItem key={index}>
+                  <div className="relative w-full h-[600px]">
+                    <LazyImage
+                      src={slide.image}
+                      alt={`Hero slide ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
+                      <blockquote className="max-w-2xl text-center">
+                        <p className="text-3xl md:text-4xl font-semibold mb-4 animate-fadeIn">
+                          "{slide.quote}"
+                        </p>
+                        <footer className="text-lg md:text-xl animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+                          — {slide.author}
+                        </footer>
+                      </blockquote>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </Carousel>
         </section>
 
-        {/* Featured Products */}
+        {/* Featured Products Section */}
         <section className="py-12 px-4">
           <div className="container mx-auto">
             <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
