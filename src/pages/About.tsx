@@ -8,11 +8,11 @@ const About = () => {
       
       <div className="container mx-auto px-4 pt-24 flex-grow">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 animate-fadeIn">About GreenHaven</h1>
+          <h1 className="text-4xl font-bold mb-8 animate-fadeIn">About Plant&deco</h1>
           
           <div className="prose prose-lg space-y-6 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
             <p className="text-lg text-muted-foreground">
-              Welcome to GreenHaven, where we believe in bringing the beauty and tranquility of nature into your living spaces. Our journey began with a simple idea: to make it easier for people to create their own indoor sanctuaries.
+              Welcome to Plant&deco, where we believe in bringing the beauty and tranquility of nature into your living spaces. Our journey began with a simple idea: to make it easier for people to create their own indoor sanctuaries.
             </p>
             
             <p className="text-lg text-muted-foreground">
@@ -31,7 +31,7 @@ const About = () => {
 
       <footer className="py-6 px-4 bg-secondary/10 mt-12">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Sujal Khadgi. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Plant&deco. All rights reserved.</p>
         </div>
       </footer>
     </div>
