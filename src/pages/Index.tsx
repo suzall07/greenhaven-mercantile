@@ -6,6 +6,7 @@ import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
+import { useEffect, useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -34,10 +35,26 @@ const heroSlides = [
 
 const Index = () => {
   const { toast } = useToast();
+  const [carouselApi, setCarouselApi] = useState<any>(null);
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
   });
+
+  // Set up auto-sliding for carousel
+  useEffect(() => {
+    if (carouselApi) {
+      // Auto advance slide every 5 seconds
+      const autoplayInterval = setInterval(() => {
+        carouselApi.scrollNext();
+      }, 5000);
+
+      // Clear interval on component unmount
+      return () => {
+        clearInterval(autoplayInterval);
+      };
+    }
+  }, [carouselApi]);
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -83,7 +100,7 @@ const Index = () => {
       <main className="flex-grow">
         {/* Hero Section with Carousel */}
         <section className="relative w-full h-[600px] overflow-hidden">
-          <Carousel className="w-full h-full" opts={{ loop: true }}>
+          <Carousel className="w-full h-full" opts={{ loop: true }} setApi={setCarouselApi}>
             <CarouselContent>
               {heroSlides.map((slide, index) => (
                 <CarouselItem key={index}>
