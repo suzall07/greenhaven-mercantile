@@ -60,7 +60,7 @@ const Auth = () => {
         const { error } = await signUpWithEmail(email, password);
         if (error) throw error;
         toast({
-          title: "Welcome to GreenHaven!",
+          title: "Welcome to Plant&deco!",
           description: "Your account has been created successfully.",
         });
         navigate("/");
@@ -91,7 +91,7 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="flex flex-col items-center mb-6 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-primary animate-fadeIn">
-              {isLogin ? (isAdmin ? "Admin Access" : "Welcome Back") : "Join GreenHaven"}
+              {isLogin ? (isAdmin ? "Admin Access" : "Welcome Back") : "Join Plant&deco"}
             </h1>
             <p className="text-muted-foreground animate-fadeIn" style={{ animationDelay: "0.1s" }}>
               {isLogin 
@@ -196,7 +196,7 @@ const Auth = () => {
                 className="text-sm text-primary hover:underline"
               >
                 {isLogin
-                  ? "New to GreenHaven? Create an account"
+                  ? "New to Plant&deco? Create an account"
                   : "Already have an account? Sign in"}
               </button>
             </div>
