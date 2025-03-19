@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
 
@@ -72,32 +73,38 @@ const Auth = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 pt-24">
+      <div className="container mx-auto px-4 pt-16 pb-12">
         <div className="max-w-md mx-auto">
-          <h1 className="text-4xl font-bold mb-8 animate-fadeIn">
-            {isLogin ? "Welcome Back" : "Create Account"}
-          </h1>
+          <div className="flex flex-col items-center mb-6 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-primary animate-fadeIn">
+              {isLogin ? "Welcome Back" : "Join GreenHaven"}
+            </h1>
+            <p className="text-muted-foreground animate-fadeIn" style={{ animationDelay: "0.1s" }}>
+              {isLogin ? "Sign in to your account" : "Create your customer account"}
+            </p>
+          </div>
           
-          <div className="glass-panel p-6 rounded-lg animate-fadeIn" style={{ animationDelay: "0.2s" }}>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white shadow-md rounded-xl p-6 md:p-8 border border-secondary/20 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+            <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
-                    Name
-                  </label>
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Your Name
+                  </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
+                    placeholder="John Doe"
+                    className="h-11"
                   />
                 </div>
               )}
               
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-2">
-                  Email
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -105,13 +112,14 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
+                  className="h-11"
                 />
               </div>
               
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-2">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
                   Password
-                </label>
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -119,14 +127,15 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  className="h-11"
                 />
               </div>
 
               {!isLogin && (
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
                     Confirm Password
-                  </label>
+                  </Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -134,12 +143,13 @@ const Auth = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    className="h-11"
                   />
                 </div>
               )}
               
-              <Button className="w-full" disabled={isLoading}>
-                {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+              <Button className="w-full h-11 text-base" disabled={isLoading}>
+                {isLoading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
             </form>
 
@@ -153,10 +163,19 @@ const Auth = () => {
                 className="text-sm text-primary hover:underline"
               >
                 {isLogin
-                  ? "Don't have an account? Sign up"
+                  ? "New to GreenHaven? Create an account"
                   : "Already have an account? Sign in"}
               </button>
             </div>
+          </div>
+          
+          <div className="mt-8 text-center text-sm text-muted-foreground animate-fadeIn" style={{ animationDelay: "0.3s" }}>
+            <p>By signing in or creating an account, you agree to our</p>
+            <p className="mt-1">
+              <a href="#" className="text-primary hover:underline">Terms of Service</a>
+              {" and "}
+              <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+            </p>
           </div>
         </div>
       </div>
