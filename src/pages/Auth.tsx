@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
+import { Switch } from "@/components/ui/switch";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -27,15 +29,20 @@ const Auth = () => {
         const { error } = await signInWithEmail(email, password);
         if (error) throw error;
 
-        // Check if user is admin
-        if (email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98') {
-          navigate("/admin");
+        // Redirect based on login mode
+        if (isAdmin) {
+          // Check if user is admin
+          if (email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98') {
+            navigate("/admin");
+          } else {
+            throw new Error("You don't have admin privileges");
+          }
         } else {
           navigate("/");
         }
 
         toast({
-          title: "Welcome back!",
+          title: `Welcome back${isAdmin ? ", admin" : ""}!`,
           description: "You have successfully signed in.",
         });
       } else {
@@ -69,6 +76,13 @@ const Auth = () => {
     }
   };
 
+  // Toggle between admin and customer login mode when in login state
+  const handleModeToggle = (checked: boolean) => {
+    setIsAdmin(checked);
+    // Clear the form when switching modes
+    setPassword("");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -77,14 +91,28 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <div className="flex flex-col items-center mb-6 text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-primary animate-fadeIn">
-              {isLogin ? "Welcome Back" : "Join GreenHaven"}
+              {isLogin ? (isAdmin ? "Admin Access" : "Welcome Back") : "Join GreenHaven"}
             </h1>
             <p className="text-muted-foreground animate-fadeIn" style={{ animationDelay: "0.1s" }}>
-              {isLogin ? "Sign in to your account" : "Create your customer account"}
+              {isLogin 
+                ? (isAdmin ? "Sign in to administrator account" : "Sign in to your account") 
+                : "Create your customer account"}
             </p>
           </div>
           
           <div className="bg-white shadow-md rounded-xl p-6 md:p-8 border border-secondary/20 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
+            {isLogin && (
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <span className={`text-sm ${!isAdmin ? "font-semibold" : ""}`}>Customer</span>
+                <Switch 
+                  checked={isAdmin} 
+                  onCheckedChange={handleModeToggle} 
+                  className="data-[state=checked]:bg-amber-600"
+                />
+                <span className={`text-sm ${isAdmin ? "font-semibold" : ""}`}>Admin</span>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
                 <div className="space-y-2">
@@ -148,8 +176,12 @@ const Auth = () => {
                 </div>
               )}
               
-              <Button className="w-full h-11 text-base" disabled={isLoading}>
-                {isLoading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
+              <Button className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} disabled={isLoading}>
+                {isLoading 
+                  ? "Processing..." 
+                  : isLogin 
+                    ? (isAdmin ? "Admin Sign In" : "Customer Sign In") 
+                    : "Create Account"}
               </Button>
             </form>
 
@@ -159,6 +191,7 @@ const Auth = () => {
                   setIsLogin(!isLogin);
                   setPassword("");
                   setConfirmPassword("");
+                  if (!isLogin) setIsAdmin(false); // Reset to customer mode when switching to login
                 }}
                 className="text-sm text-primary hover:underline"
               >
