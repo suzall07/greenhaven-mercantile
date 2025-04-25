@@ -2,11 +2,9 @@
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { useProfile } from "@/contexts/ProfileContext";
 
 interface ReviewFormProps {
   rating: number;
@@ -29,28 +27,22 @@ export const ReviewForm = ({
   isEditing = false,
   onCancel,
 }: ReviewFormProps) => {
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
-  // Check if user is logged in before allowing them to submit a review
-  const handleSubmitClick = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      setShowLoginPrompt(true);
+  const handleSubmitClick = () => {
+    if (!profile) {
       toast({
         title: "Login Required",
         description: "You need to be logged in to leave a review.",
         variant: "destructive",
       });
+      navigate('/login');
       return;
     }
     
     onSubmit();
-  };
-
-  const handleLoginClick = () => {
-    navigate('/login', { state: { returnTo: window.location.pathname } });
   };
 
   return (
@@ -75,20 +67,12 @@ export const ReviewForm = ({
         className="mb-2"
       />
       <div className="flex gap-2">
-        {showLoginPrompt ? (
-          <Button 
-            onClick={handleLoginClick}
-          >
-            Login to Submit Review
-          </Button>
-        ) : (
-          <Button 
-            onClick={handleSubmitClick}
-            disabled={!rating || !comment || isSubmitting}
-          >
-            {isEditing ? "Update Review" : "Submit Review"}
-          </Button>
-        )}
+        <Button 
+          onClick={handleSubmitClick}
+          disabled={!rating || !comment || isSubmitting}
+        >
+          {isEditing ? "Update Review" : "Submit Review"}
+        </Button>
         
         {isEditing && onCancel && (
           <Button 
