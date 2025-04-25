@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, supabase } from "@/lib/supabase";
 import { Navigation } from "@/components/Navigation";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 const CustomerLogin = () => {
   const [email, setEmail] = useState("");
@@ -17,6 +18,7 @@ const CustomerLogin = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [validationErrors, setValidationErrors] = useState({
     email: "",
     password: "",
@@ -85,12 +87,25 @@ const CustomerLogin = () => {
         localStorage.removeItem("rememberedEmail");
       }
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-      
-      navigate("/");
+      // Check if admin login and redirect accordingly
+      if (isAdmin) {
+        // For admin access, check if email matches admin email
+        if (email === 'sujalkhadgi13@gmail.com') {
+          toast({
+            title: "Welcome back, Admin!",
+            description: "You have successfully signed in as an admin.",
+          });
+          navigate("/admin");
+        } else {
+          throw new Error("You don't have admin privileges");
+        }
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        navigate("/");
+      }
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -119,14 +134,25 @@ const CustomerLogin = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-primary">
-              Welcome Back
+              {isAdmin ? "Admin Login" : "Welcome Back"}
             </h1>
             <p className="text-muted-foreground">
-              Sign in to your Plant&deco account
+              {isAdmin ? "Sign in to your admin account" : "Sign in to your Plant&deco account"}
             </p>
           </div>
           
           <div className="bg-white shadow-lg rounded-xl p-6 md:p-8 border border-secondary/20">
+            {/* Toggle between customer and admin login */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className={`text-sm ${!isAdmin ? "font-semibold" : ""}`}>Customer</span>
+              <Switch 
+                checked={isAdmin} 
+                onCheckedChange={(checked) => setIsAdmin(checked)}
+                className="data-[state=checked]:bg-amber-600"
+              />
+              <span className={`text-sm ${isAdmin ? "font-semibold" : ""}`}>Admin</span>
+            </div>
+            
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium">
@@ -214,8 +240,11 @@ const CustomerLogin = () => {
                 </a>
               </div>
               
-              <Button className="w-full h-11 text-base" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+              <Button 
+                className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} 
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : isAdmin ? "Admin Sign In" : "Sign In"}
               </Button>
             </form>
 

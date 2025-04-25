@@ -10,6 +10,8 @@ interface ReviewFormProps {
   onCommentChange: (comment: string) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  isEditing?: boolean;
+  onCancel?: () => void;
 }
 
 export const ReviewForm = ({
@@ -19,6 +21,8 @@ export const ReviewForm = ({
   onCommentChange,
   onSubmit,
   isSubmitting,
+  isEditing = false,
+  onCancel,
 }: ReviewFormProps) => {
   return (
     <div className="mb-4">
@@ -41,12 +45,23 @@ export const ReviewForm = ({
         onChange={(e) => onCommentChange(e.target.value)}
         className="mb-2"
       />
-      <Button 
-        onClick={onSubmit}
-        disabled={!rating || !comment || isSubmitting}
-      >
-        Submit Review
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          onClick={onSubmit}
+          disabled={!rating || !comment || isSubmitting}
+        >
+          {isEditing ? "Update Review" : "Submit Review"}
+        </Button>
+        
+        {isEditing && onCancel && (
+          <Button 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
