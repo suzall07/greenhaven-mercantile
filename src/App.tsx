@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import IndoorPlants from "@/pages/IndoorPlants";
 import OutdoorPlants from "@/pages/OutdoorPlants";
 import CustomerLogin from "@/pages/CustomerLogin";
 import Cart from "@/pages/Cart";
-import ProductDetails from "@/components/product/ProductDetails";
+import { ProductDetails } from "@/components/product/ProductDetails"; // Changed from default to named import
 
 const queryClient = new QueryClient({
   defaultOptions: {
