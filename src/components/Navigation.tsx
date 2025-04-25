@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, LogOut } from "lucide-react"; // Add LogOut import here
 import { Button } from "./ui/button";
 import { SearchComponent } from "./search/SearchComponent";
 import { CartButton } from "./cart/CartButton";
