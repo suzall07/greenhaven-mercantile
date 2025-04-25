@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
@@ -9,8 +10,27 @@ import { useToast } from "@/hooks/use-toast";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check for user authentication
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -59,14 +79,17 @@ export const Navigation = () => {
           <div className="hidden md:flex items-center space-x-4">
             <SearchComponent />
             <CartButton />
-            <Button variant="ghost" size="icon">
-              <Link to="/auth">
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+            {user ? (
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Button variant="ghost" size="icon">
+                <Link to="/auth">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -119,17 +142,23 @@ export const Navigation = () => {
               >
                 Contact
               </Link>
-              <div className="flex space-x-4">
+              <div className="flex space-x-4 items-center">
                 <SearchComponent />
                 <CartButton />
-                <Button variant="ghost" size="icon">
-                  <Link to="/auth">
-                    <User className="h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleLogout}>
-                  <LogOut className="h-5 w-5" />
-                </Button>
+                {user ? (
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}>
+                    <LogOut className="h-5 w-5" />
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth">
+                      <User className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

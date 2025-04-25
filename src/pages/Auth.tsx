@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
+import { signInWithEmail, signUpWithEmail, supabase } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
 
 const Auth = () => {
@@ -26,7 +26,7 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signInWithEmail(email, password);
+        const { data, error } = await signInWithEmail(email, password);
         if (error) throw error;
 
         // Redirect based on login mode
@@ -34,17 +34,20 @@ const Auth = () => {
           // Check if user is admin
           if (email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98') {
             navigate("/admin");
+            toast({
+              title: "Welcome back, admin!",
+              description: "You have successfully signed in.",
+            });
           } else {
             throw new Error("You don't have admin privileges");
           }
         } else {
           navigate("/");
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
         }
-
-        toast({
-          title: `Welcome back${isAdmin ? ", admin" : ""}!`,
-          description: "You have successfully signed in.",
-        });
       } else {
         // Check if passwords match for signup
         if (password !== confirmPassword) {
