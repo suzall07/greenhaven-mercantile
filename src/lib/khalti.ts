@@ -1,6 +1,6 @@
 
 import { supabase } from "./supabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface KhaltiPaymentInput {
   amount: number;
@@ -55,8 +55,7 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
             console.log("Payment verification:", verificationData);
             
             if (verificationData.status === 'Completed') {
-              const toast = useToast();
-              toast.toast({
+              toast({
                 title: "Payment Successful",
                 description: "Your payment has been processed successfully.",
               });
@@ -82,8 +81,7 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
           }
         } catch (error) {
           console.error('Error checking payment status:', error);
-          const toast = useToast();
-          toast.toast({
+          toast({
             title: "Payment Error",
             description: "There was an error processing your payment.",
             variant: "destructive",
@@ -95,8 +93,7 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
     return data;
   } catch (error: any) {
     console.error('Error initiating Khalti payment:', error);
-    const toast = useToast();
-    toast.toast({
+    toast({
       title: "Payment Error",
       description: error.message || "Failed to initiate payment. Please try again.",
       variant: "destructive",
