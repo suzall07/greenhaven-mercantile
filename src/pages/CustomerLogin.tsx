@@ -1,147 +1,65 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "@/components/Navigation";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
 
 const CustomerLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  
-  const returnTo = location.state?.returnTo || "/";
-  
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        navigate(returnTo);
-      }
-    };
-    
-    checkUser();
-  }, [navigate, returnTo]);
+  const { login, signUp, isAuthenticated } = useProfile();
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    navigate('/');
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      
-      navigate(returnTo);
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message || "An error occurred during login.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await login(loginEmail, loginPassword);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+    if (signupPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
       return;
     }
     
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        }
-      });
-      
-      if (error) throw error;
-      
-      // Create a profile for the new user to support foreign key constraints
-      if (data.user) {
-        // Profile will be created by the database trigger we added
-        toast({
-          title: "Signup successful",
-          description: "Welcome to Plant&deco!",
-        });
-        navigate(returnTo);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message || "An error occurred during signup.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (signupPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      return;
     }
+    
+    setPasswordError("");
+    await signUp(signupEmail, signupPassword);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      
       <div className="container mx-auto px-4 pt-24 flex justify-center">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Customer Account</CardTitle>
-            <CardDescription>
-              Login or sign up to track orders and leave reviews.
-            </CardDescription>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Welcome</CardTitle>
+            <CardDescription>Sign in to your account or create a new one.</CardDescription>
           </CardHeader>
           
-          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
@@ -151,69 +69,31 @@ const CustomerLogin = () => {
                 <CardContent className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="your.email@example.com" 
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                       required
                     />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        <span className="sr-only">
-                          {showPassword ? "Hide password" : "Show password"}
-                        </span>
-                      </Button>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                      <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => 
-                        setRememberMe(checked === true)}
+                    <Input 
+                      id="password" 
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
                     />
-                    <Label
-                      htmlFor="remember"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      Remember me
-                    </Label>
                   </div>
                 </CardContent>
-                
                 <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Please wait
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
+                  <Button type="submit" className="w-full">Sign In</Button>
                 </CardFooter>
               </form>
             </TabsContent>
@@ -223,71 +103,45 @@ const CustomerLogin = () => {
                 <CardContent className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                    <Input 
+                      id="signup-email" 
+                      type="email" 
+                      placeholder="your.email@example.com" 
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
                       required
                     />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        <span className="sr-only">
-                          {showPassword ? "Hide password" : "Show password"}
-                        </span>
-                      </Button>
-                    </div>
+                    <Input 
+                      id="signup-password" 
+                      type="password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input 
+                      id="confirm-password" 
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    {passwordError && (
+                      <p className="text-sm text-destructive">{passwordError}</p>
+                    )}
                   </div>
                 </CardContent>
-                
                 <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
+                  <Button type="submit" className="w-full">Create Account</Button>
                 </CardFooter>
               </form>
             </TabsContent>
           </Tabs>
-          
-          <div className="px-6 py-4 text-center text-sm text-muted-foreground">
-            <p>
-              Need admin access?{" "}
-              <Button
-                variant="link"
-                className="p-0 h-auto"
-                onClick={() => navigate("/auth")}
-              >
-                Go to Admin Login
-              </Button>
-            </p>
-          </div>
         </Card>
       </div>
     </div>

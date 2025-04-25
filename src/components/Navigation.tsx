@@ -1,40 +1,22 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, LogOut } from "lucide-react";
+import { User, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { SearchComponent } from "./search/SearchComponent";
 import { CartButton } from "./cart/CartButton";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/contexts/ProfileContext";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Check for user authentication
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  const { isAuthenticated, profile, logout } = useProfile();
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logout();
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
@@ -81,10 +63,13 @@ export const Navigation = () => {
             <Link to="/cart">
               <CartButton />
             </Link>
-            {user ? (
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">{profile?.email?.split('@')[0]}</span>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
             ) : (
               <Button variant="ghost" size="icon">
                 <Link to="/login">
@@ -149,13 +134,16 @@ export const Navigation = () => {
                 <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
                   <CartButton />
                 </Link>
-                {user ? (
-                  <Button variant="ghost" size="icon" onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}>
-                    <LogOut className="h-5 w-5" />
-                  </Button>
+                {isAuthenticated ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">{profile?.email?.split('@')[0]}</span>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}>
+                      <LogOut className="h-5 w-5" />
+                    </Button>
+                  </div>
                 ) : (
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
                     <Link to="/login">

@@ -29,16 +29,16 @@ export const ReviewForm = ({
 }: ReviewFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { profile } = useProfile();
+  const { isAuthenticated } = useProfile();
 
   const handleSubmitClick = () => {
-    if (!profile) {
+    if (!isAuthenticated) {
       toast({
         title: "Login Required",
         description: "You need to be logged in to leave a review.",
         variant: "destructive",
       });
-      navigate('/login');
+      navigate('/login', { state: { returnUrl: window.location.pathname } });
       return;
     }
     
