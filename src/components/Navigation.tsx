@@ -85,7 +85,7 @@ export const Navigation = () => {
               </Button>
             ) : (
               <Button variant="ghost" size="icon">
-                <Link to="/auth">
+                <Link to="/login">
                   <User className="h-5 w-5" />
                 </Link>
               </Button>
@@ -154,7 +154,7 @@ export const Navigation = () => {
                   </Button>
                 ) : (
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/auth">
+                    <Link to="/login">
                       <User className="h-5 w-5" />
                     </Link>
                   </Button>
@@ -166,4 +166,4 @@ export const Navigation = () => {
       </div>
     </nav>
   );
-};
+}
