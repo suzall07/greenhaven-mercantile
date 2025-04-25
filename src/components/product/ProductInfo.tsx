@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast"; // Using direct toast import
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 
@@ -24,7 +24,6 @@ export const ProductInfo = ({
   onAddToCart,
   isLoading,
 }: ProductInfoProps) => {
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleBuyNow = async () => {

@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast'; // Direct toast import
 import { useNavigate } from 'react-router-dom';
 
 interface Profile {
@@ -33,8 +33,6 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check current user when component mounts
@@ -48,12 +46,18 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
             .from('profiles')
             .select('*')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
           if (error && error.code !== 'PGRST116') {
             console.error('Error fetching profile:', error);
           } else if (data) {
             setProfile(data);
+          } else {
+            // If no profile exists, create a minimal one
+            setProfile({
+              id: user.id,
+              email: user.email
+            });
           }
         } else {
           setIsAuthenticated(false);
@@ -71,19 +75,27 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        console.log("Auth state change: User logged in", session.user.id);
         setIsAuthenticated(true);
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
           console.error('Error fetching profile:', error);
-        } else {
+        } else if (data) {
           setProfile(data);
+        } else {
+          // If no profile exists, create a minimal one
+          setProfile({
+            id: session.user.id,
+            email: session.user.email
+          });
         }
       } else {
+        console.log("Auth state change: User logged out");
         setIsAuthenticated(false);
         setProfile(null);
       }
@@ -108,13 +120,14 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         description: "You have been successfully logged in",
       });
       
-      navigate('/');
+      return;
     } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -125,13 +138,13 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         title: "Logged out",
         description: "You have been successfully logged out",
       });
-      navigate('/');
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -153,6 +166,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     }
   };
 

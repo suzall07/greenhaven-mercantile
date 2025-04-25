@@ -1,17 +1,15 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, LogOut } from "lucide-react"; // Add LogOut import here
+import { User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { SearchComponent } from "./search/SearchComponent";
 import { CartButton } from "./cart/CartButton";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useProfile } from "@/contexts/ProfileContext";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { isAuthenticated, profile, logout } = useProfile();
 
   const handleLogout = async () => {
@@ -39,7 +37,6 @@ export const Navigation = () => {
             Plant&deco
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="nav-link">
               Home
@@ -79,7 +76,6 @@ export const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -90,7 +86,6 @@ export const Navigation = () => {
           </Button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden glass-panel absolute top-16 left-0 right-0 p-4 animate-fadeIn">
             <div className="flex flex-col space-y-4">

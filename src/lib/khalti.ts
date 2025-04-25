@@ -75,7 +75,9 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
               }
               
               // Redirect to home page after successful payment
-              window.location.href = '/';
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 2000);
               return verificationData;
             }
           }
@@ -86,6 +88,7 @@ export async function initiateKhaltiPayment(input: KhaltiPaymentInput) {
             description: "There was an error processing your payment.",
             variant: "destructive",
           });
+          clearInterval(checkPayment);
         }
       }, 2000);
     }

@@ -1,4 +1,3 @@
-
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,12 +10,11 @@ import {
 import { useCart } from "@/contexts/CartContext";
 import { updateCartItemQuantity, removeFromCart, supabase } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 
 export const CartButton = () => {
   const { cartItems, refetchCart } = useCart();
-  const { toast } = useToast();
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
     try {
