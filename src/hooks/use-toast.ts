@@ -1,8 +1,14 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Toast as ToastPrimitive } from "@/components/ui/toast";
 
-type ToastProps = React.ComponentProps<typeof ToastPrimitive>;
+type ToastProps = React.ComponentProps<typeof ToastPrimitive> & {
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  variant?: "default" | "destructive";
+};
 
 interface ToastOptions {
   title?: string;
@@ -44,10 +50,12 @@ export const useToast = () => {
   }, []);
 
   // Listen for toast events (for use outside of React components)
-  useCallback(() => {
+  useEffect(() => {
     const handleToast = (event: Event) => {
       const options = (event as CustomEvent).detail;
-      addToast(options);
+      if (options) {
+        addToast(options);
+      }
     };
 
     document.addEventListener("toast", handleToast);

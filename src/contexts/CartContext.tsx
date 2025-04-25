@@ -2,7 +2,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getCartItems, CartItem, supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 type CartContextType = {
   cartItems: CartItem[];
@@ -25,7 +25,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const { toast } = useToast();
 
   // Check for authenticated user
   useEffect(() => {

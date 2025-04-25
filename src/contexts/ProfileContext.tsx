@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast'; // Direct toast import
+import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 interface Profile {

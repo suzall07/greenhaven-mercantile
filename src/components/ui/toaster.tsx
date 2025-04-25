@@ -16,7 +16,7 @@ export function Toaster() {
   useEffect(() => {
     const handleToast = (event: Event) => {
       const detail = (event as CustomEvent).detail;
-      if (detail) {
+      if (detail && typeof detail === 'object') {
         // The toast function will be called by the custom event handler in useToast
       }
     };

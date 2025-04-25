@@ -1,6 +1,6 @@
 
 import { supabase } from "./supabase";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface KhaltiPaymentInput {
   amount: number;
