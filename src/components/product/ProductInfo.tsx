@@ -14,7 +14,8 @@ interface ProductInfoProps {
   product: Product;
   averageRating: string;
   reviewCount: number;
-  onAddToCart: () => void;
+  onAddToCart?: () => void;
+  onBuyNow?: () => void;
   isLoading: boolean;
 }
 
@@ -23,6 +24,8 @@ export const ProductInfo = ({
   averageRating,
   reviewCount,
   isLoading,
+  onAddToCart,
+  onBuyNow,
 }: ProductInfoProps) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -30,6 +33,12 @@ export const ProductInfo = ({
   const [isBuying, setIsBuying] = useState(false);
 
   const handleAddToCart = async () => {
+    if (onAddToCart) {
+      // If onAddToCart prop is provided, use that
+      onAddToCart();
+      return;
+    }
+    
     setIsAdding(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -52,6 +61,12 @@ export const ProductInfo = ({
   };
 
   const handleBuyNow = async () => {
+    if (onBuyNow) {
+      // If onBuyNow prop is provided, use that
+      onBuyNow();
+      return;
+    }
+    
     setIsBuying(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
