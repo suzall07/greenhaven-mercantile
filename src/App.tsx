@@ -7,14 +7,13 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
-import Auth from "@/pages/Auth";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 import IndoorPlants from "@/pages/IndoorPlants";
 import OutdoorPlants from "@/pages/OutdoorPlants";
 import CustomerLogin from "@/pages/CustomerLogin";
 import Cart from "@/pages/Cart";
-import { ProductDetails } from "@/components/product/ProductDetails"; // Changed from default to named import
+import { ProductDetails } from "@/components/product/ProductDetails";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +34,6 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<CustomerLogin />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/indoor-plants" element={<IndoorPlants />} />
