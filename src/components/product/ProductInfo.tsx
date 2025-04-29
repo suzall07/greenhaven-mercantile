@@ -4,16 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast"; // Using direct toast import
+import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
+import { useCart } from "@/contexts/CartContext";
+import { useState } from "react";
 
 interface ProductInfoProps {
   product: Product;
   averageRating: string;
   reviewCount: number;
   onAddToCart: () => void;
-  onBuyNow: () => void;
   isLoading: boolean;
 }
 
@@ -21,12 +22,37 @@ export const ProductInfo = ({
   product,
   averageRating,
   reviewCount,
-  onAddToCart,
   isLoading,
 }: ProductInfoProps) => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isBuying, setIsBuying] = useState(false);
+
+  const handleAddToCart = async () => {
+    setIsAdding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to add items to cart",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      await addToCart(product.id, 1);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   const handleBuyNow = async () => {
+    setIsBuying(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -35,7 +61,7 @@ export const ProductInfo = ({
           description: "You need to be signed in to make a purchase",
           variant: "destructive",
         });
-        navigate('/auth');
+        navigate('/login');
         return;
       }
 
@@ -52,9 +78,11 @@ export const ProductInfo = ({
     } catch (error: any) {
       toast({
         title: "Payment Error",
-        description: error.message,
+        description: error.message || "Failed to initiate payment",
         variant: "destructive",
       });
+    } finally {
+      setIsBuying(false);
     }
   };
 
@@ -97,18 +125,18 @@ export const ProductInfo = ({
         <div className="space-x-4">
           <Button 
             size="lg" 
-            onClick={onAddToCart}
-            disabled={isLoading}
+            onClick={handleAddToCart}
+            disabled={isLoading || isAdding}
           >
-            Add to Cart
+            {isAdding ? "Adding..." : "Add to Cart"}
           </Button>
           <Button 
             size="lg" 
             variant="secondary"
             onClick={handleBuyNow}
-            disabled={isLoading}
+            disabled={isLoading || isBuying}
           >
-            Buy Now with Khalti
+            {isBuying ? "Processing..." : "Buy Now with Khalti"}
           </Button>
         </div>
       </div>

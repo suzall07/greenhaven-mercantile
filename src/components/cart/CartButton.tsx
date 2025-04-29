@@ -9,47 +9,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
-import { updateCartItemQuantity, removeFromCart, supabase } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
+import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const CartButton = () => {
-  const { cartItems, refetchCart } = useCart();
-
-  const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
-    try {
-      await updateCartItemQuantity(itemId, newQuantity);
-      await refetchCart();
-      toast({
-        title: "Cart updated",
-        description: "Item quantity has been updated",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRemoveItem = async (itemId: number) => {
-    try {
-      await removeFromCart(itemId);
-      await refetchCart();
-      toast({
-        title: "Item removed",
-        description: "Item has been removed from cart",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  const { cartItems, updateQuantity, removeItem } = useCart();
+  const navigate = useNavigate();
 
   const handleCheckout = async () => {
     try {
@@ -60,6 +28,7 @@ export const CartButton = () => {
           description: "You need to be signed in to checkout",
           variant: "destructive",
         });
+        navigate('/login');
         return;
       }
 
@@ -80,7 +49,7 @@ export const CartButton = () => {
     } catch (error: any) {
       toast({
         title: "Payment Error",
-        description: error.message,
+        description: error.message || "Failed to initiate payment",
         variant: "destructive",
       });
     }
@@ -128,7 +97,7 @@ export const CartButton = () => {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                       >
                         -
                       </Button>
@@ -137,7 +106,7 @@ export const CartButton = () => {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         +
                       </Button>
@@ -145,7 +114,7 @@ export const CartButton = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

@@ -1,7 +1,6 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getCartItems, CartItem, supabase } from '@/lib/supabase';
+import { getCartItems, CartItem, supabase, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
 type CartContextType = {
@@ -9,6 +8,10 @@ type CartContextType = {
   isLoading: boolean;
   error: Error | null;
   refetchCart: () => Promise<void>;
+  addToCart: (productId: number, quantity: number) => Promise<void>;
+  updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
+  removeItem: (cartItemId: number) => Promise<void>;
+  clearCart: () => Promise<void>;
 };
 
 const CartContext = createContext<CartContextType>({
@@ -16,6 +19,10 @@ const CartContext = createContext<CartContextType>({
   isLoading: false,
   error: null,
   refetchCart: async () => {},
+  addToCart: async () => {},
+  updateQuantity: async () => {},
+  removeItem: async () => {},
+  clearCart: async () => {},
 });
 
 export const useCart = () => useContext(CartContext);
@@ -41,6 +48,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Clear cart items when user logs out
       if (!session) {
         setCartItems([]);
+      } else {
+        // Fetch cart items when user logs in
+        fetchCartItems(session.user.id);
       }
     });
 
@@ -52,12 +62,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
-      fetchCartItems();
+      fetchCartItems(userId);
     }
   }, [userId]);
 
-  const fetchCartItems = async () => {
-    if (!userId) {
+  const fetchCartItems = async (uid: string | null = userId) => {
+    if (!uid) {
       setCartItems([]);
       return;
     }
@@ -66,7 +76,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const items = await getCartItems(userId);
+      const items = await getCartItems(uid);
       setCartItems(items);
     } catch (err: any) {
       setError(err);
@@ -84,6 +94,93 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     await fetchCartItems();
   };
 
+  const addToCart = async (productId: number, quantity: number) => {
+    try {
+      if (!userId) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to add items to your cart",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await addItemToCart(userId, productId, quantity);
+      await refetchCart();
+      toast({
+        title: "Added to cart",
+        description: "Item has been added to your cart",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add item to cart",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const updateQuantity = async (cartItemId: number, quantity: number) => {
+    try {
+      await updateCartItemQuantity(cartItemId, quantity);
+      await refetchCart();
+      toast({
+        title: "Cart updated",
+        description: "Item quantity has been updated",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update quantity",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const removeItem = async (cartItemId: number) => {
+    try {
+      await removeFromCart(cartItemId);
+      await refetchCart();
+      toast({
+        title: "Item removed",
+        description: "Item has been removed from cart",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove item",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    if (!userId || cartItems.length === 0) return;
+
+    setIsLoading(true);
+    try {
+      for (const item of cartItems) {
+        await removeFromCart(item.id);
+      }
+      setCartItems([]);
+      toast({
+        title: "Cart cleared",
+        description: "All items have been removed from your cart",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to clear cart",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -91,6 +188,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         error,
         refetchCart,
+        addToCart,
+        updateQuantity,
+        removeItem,
+        clearCart,
       }}
     >
       {children}
