@@ -36,14 +36,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Check for authenticated user
   useEffect(() => {
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUserId(data.user?.id || null);
+      try {
+        const { data } = await supabase.auth.getUser();
+        setUserId(data.user?.id || null);
+        console.log("Auth state on initial load:", data.user ? "User logged in" : "User not logged in");
+      } catch (error) {
+        console.error("Error checking auth state:", error);
+      }
     };
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user.id || null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event, session?.user?.id);
+      setUserId(session?.user?.id || null);
       
       // Clear cart items when user logs out
       if (!session) {
@@ -62,6 +68,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
+      console.log("Fetching cart items for user:", userId);
       fetchCartItems(userId);
     }
   }, [userId]);
@@ -77,8 +84,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const items = await getCartItems(uid);
+      console.log("Cart items fetched:", items);
       setCartItems(items);
     } catch (err: any) {
+      console.error("Error fetching cart items:", err);
       setError(err);
       toast({
         title: "Error",
@@ -112,6 +121,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         description: "Item has been added to your cart",
       });
     } catch (error: any) {
+      console.error("Error adding to cart:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add item to cart",

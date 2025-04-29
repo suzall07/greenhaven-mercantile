@@ -55,6 +55,11 @@ export const ProductInfo = ({
       await addToCart(product.id, 1);
     } catch (error) {
       console.error("Error adding to cart:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while adding to cart",
+        variant: "destructive",
+      });
     } finally {
       setIsAdding(false);
     }
