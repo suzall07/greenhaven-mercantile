@@ -11,7 +11,7 @@ export function useCartActions(userId: string | null) {
   const fetchCartItems = async (uid: string | null = userId) => {
     // If no user ID is provided, clear the cart items
     if (!uid) {
-      console.log("No user ID provided, clearing cart items");
+      console.log("No user ID provided or user logged out, clearing cart items");
       setCartItems([]);
       return;
     }

@@ -47,15 +47,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change:", event, session?.user?.id);
-      setUserId(session?.user?.id || null);
       
-      // Clear cart items when user logs out
-      if (!session) {
-        // When userId is null, fetchCartItems will set cartItems to empty array
-        fetchCartItems(null);
-      } else {
-        // Fetch cart items when user logs in
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        console.log("User logged in, fetching cart items");
         fetchCartItems(session.user.id);
+      } else {
+        setUserId(null);
+        console.log("User logged out, clearing cart");
+        fetchCartItems(null);
       }
     });
 
@@ -63,14 +63,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Fetch cart items when userId changes
-  useEffect(() => {
-    if (userId) {
-      console.log("Fetching cart items for user:", userId);
-      fetchCartItems(userId);
-    }
-  }, [userId]);
 
   return (
     <CartContext.Provider
