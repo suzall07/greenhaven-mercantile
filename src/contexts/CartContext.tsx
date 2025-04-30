@@ -51,8 +51,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       
       // Clear cart items when user logs out
       if (!session) {
-        // We don't have access to setCartItems here, so we'll handle this in the useCartActions hook
-        // Instead, we'll trigger a refetch which will set cartItems to empty array when userId is null
+        // When userId is null, fetchCartItems will set cartItems to empty array
         fetchCartItems(null);
       } else {
         // Fetch cart items when user logs in

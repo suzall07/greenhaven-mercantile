@@ -9,7 +9,9 @@ export function useCartActions(userId: string | null) {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchCartItems = async (uid: string | null = userId) => {
+    // If no user ID is provided, clear the cart items
     if (!uid) {
+      console.log("No user ID provided, clearing cart items");
       setCartItems([]);
       return;
     }
