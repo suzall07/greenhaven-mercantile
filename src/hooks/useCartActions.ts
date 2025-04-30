@@ -130,7 +130,6 @@ export function useCartActions(userId: string | null) {
 
   return {
     cartItems,
-    setCartItems,
     isLoading,
     error,
     fetchCartItems,
