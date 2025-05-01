@@ -13,7 +13,7 @@ export function useCartActions(userId: string | null) {
     if (!uid) {
       console.log("No user ID provided or user logged out, clearing cart items");
       setCartItems([]);
-      return;
+      return [];
     }
 
     setIsLoading(true);
@@ -23,6 +23,7 @@ export function useCartActions(userId: string | null) {
       const items = await getCartItems(uid);
       console.log("Cart items fetched:", items);
       setCartItems(items);
+      return items;
     } catch (err: any) {
       console.error("Error fetching cart items:", err);
       setError(err);
@@ -31,13 +32,14 @@ export function useCartActions(userId: string | null) {
         description: "Failed to load your cart items",
         variant: "destructive",
       });
+      return [];
     } finally {
       setIsLoading(false);
     }
   };
 
   const refetchCart = async () => {
-    await fetchCartItems();
+    return await fetchCartItems();
   };
 
   const addToCart = async (productId: number, quantity: number) => {
@@ -51,56 +53,65 @@ export function useCartActions(userId: string | null) {
         return;
       }
 
+      setIsLoading(true);
       await addItemToCart(userId, productId, quantity);
       await refetchCart();
+      setIsLoading(false);
+      
       toast({
         title: "Added to cart",
         description: "Item has been added to your cart",
       });
     } catch (error: any) {
+      setIsLoading(false);
       console.error("Error adding to cart:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add item to cart",
         variant: "destructive",
       });
-      throw error;
     }
   };
 
   const updateQuantity = async (cartItemId: number, quantity: number) => {
     try {
+      setIsLoading(true);
       await updateCartItemQuantity(cartItemId, quantity);
       await refetchCart();
+      setIsLoading(false);
+      
       toast({
         title: "Cart updated",
         description: "Item quantity has been updated",
       });
     } catch (error: any) {
+      setIsLoading(false);
       toast({
         title: "Error",
         description: error.message || "Failed to update quantity",
         variant: "destructive",
       });
-      throw error;
     }
   };
 
   const removeItem = async (cartItemId: number) => {
     try {
+      setIsLoading(true);
       await removeFromCart(cartItemId);
       await refetchCart();
+      setIsLoading(false);
+      
       toast({
         title: "Item removed",
         description: "Item has been removed from cart",
       });
     } catch (error: any) {
+      setIsLoading(false);
       toast({
         title: "Error",
         description: error.message || "Failed to remove item",
         variant: "destructive",
       });
-      throw error;
     }
   };
 

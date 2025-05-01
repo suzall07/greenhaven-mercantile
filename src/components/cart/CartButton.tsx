@@ -14,13 +14,16 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 export const CartButton = () => {
   const { cartItems, updateQuantity, removeItem } = useCart();
   const navigate = useNavigate();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleCheckout = async () => {
     try {
+      setIsCheckingOut(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -52,6 +55,8 @@ export const CartButton = () => {
         description: error.message || "Failed to initiate payment",
         variant: "destructive",
       });
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -130,8 +135,9 @@ export const CartButton = () => {
                 <Button 
                   className="w-full mt-4"
                   onClick={handleCheckout}
+                  disabled={isCheckingOut}
                 >
-                  Checkout with Khalti
+                  {isCheckingOut ? "Processing..." : "Checkout with Khalti"}
                 </Button>
               </div>
             </>

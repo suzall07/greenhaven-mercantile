@@ -5,7 +5,6 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { CartItem } from "@/lib/supabase";
 import { LazyImage } from "@/components/LazyImage";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
@@ -13,29 +12,43 @@ import { useCart } from "@/contexts/CartContext";
 const Cart = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { cartItems, refetchCart } = useCart();
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { cartItems, updateQuantity, removeItem, isLoading: cartLoading, refetchCart } = useCart();
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check if user is logged in
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log("No user found, redirecting to login");
+          toast({
+            title: "Not logged in",
+            description: "Please sign in to view your cart",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
+        }
+        
+        console.log("User authenticated, fetching cart");
+        setIsAuthenticated(true);
+        await refetchCart();
+      } catch (error) {
+        console.error("Error checking user:", error);
         toast({
-          title: "Not logged in",
-          description: "Please sign in to view your cart",
+          title: "Error",
+          description: "Something went wrong while checking authentication",
           variant: "destructive",
         });
-        navigate("/login");
-        return;
+      } finally {
+        setIsPageLoading(false);
       }
-      setUserId(user.id);
-      setIsLoading(false);
     };
 
     checkUser();
-  }, [navigate, toast]);
+  }, [navigate, toast, refetchCart]);
 
   // Calculate total price
   const totalPrice = cartItems?.reduce(
@@ -43,59 +56,35 @@ const Cart = () => {
     0
   ) || 0;
 
-  // Handle quantity change
-  const updateQuantity = async (cartItemId: number, quantity: number) => {
+  const handleQuantityUpdate = async (cartItemId: number, quantity: number) => {
     if (quantity < 1) return;
-
-    try {
-      const { error } = await supabase
-        .from("cart_items")
-        .update({ quantity })
-        .eq("id", cartItemId);
-
-      if (error) throw error;
-
-      refetchCart();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    await updateQuantity(cartItemId, quantity);
   };
 
-  // Handle item removal
-  const removeItem = async (cartItemId: number) => {
-    try {
-      const { error } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("id", cartItemId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Item removed",
-        description: "Item has been removed from your cart",
-      });
-
-      refetchCart();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleRemoveItem = async (cartItemId: number) => {
+    await removeItem(cartItemId);
   };
 
-  if (isLoading) {
+  if (isPageLoading || cartLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24 flex items-center justify-center">
           <div className="animate-pulse text-xl">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl mb-4">Please sign in to view your cart</p>
+            <Button onClick={() => navigate("/login")}>Go to Login</Button>
+          </div>
         </div>
       </div>
     );
@@ -140,9 +129,7 @@ const Cart = () => {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
+                        onClick={() => handleQuantityUpdate(item.id, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                       >
                         <Minus className="h-4 w-4" />
@@ -154,9 +141,7 @@ const Cart = () => {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
+                        onClick={() => handleQuantityUpdate(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -167,7 +152,7 @@ const Cart = () => {
                         variant="ghost"
                         size="icon"
                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => handleRemoveItem(item.id)}
                       >
                         <Trash2 className="h-5 w-5" />
                       </Button>
@@ -198,7 +183,7 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full">Proceed to Checkout</Button>
+                <Button className="w-full" onClick={() => navigate("/checkout")}>Proceed to Checkout</Button>
               </div>
             </div>
           </div>

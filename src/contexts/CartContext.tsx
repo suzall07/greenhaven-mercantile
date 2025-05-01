@@ -33,28 +33,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Check for authenticated user
   useEffect(() => {
-    const checkUser = async () => {
+    // First check the current session
+    const getCurrentUser = async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        setUserId(data.user?.id || null);
-        console.log("Auth state on initial load:", data.user ? "User logged in" : "User not logged in");
+        const currentUserId = data.user?.id || null;
+        console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
+        setUserId(currentUserId);
+        
+        // Only fetch cart items if we have a user
+        if (currentUserId) {
+          fetchCartItems(currentUserId);
+        }
       } catch (error) {
         console.error("Error checking auth state:", error);
       }
     };
 
-    checkUser();
+    getCurrentUser();
 
+    // Then set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change:", event, session?.user?.id);
+      console.log("Auth state change event:", event);
       
-      if (session?.user?.id) {
+      if (event === 'SIGNED_IN' && session?.user?.id) {
+        console.log("User signed in with ID:", session.user.id);
         setUserId(session.user.id);
-        console.log("User logged in, fetching cart items");
         fetchCartItems(session.user.id);
-      } else {
+      } 
+      else if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing user ID and cart");
         setUserId(null);
-        console.log("User logged out, clearing cart");
         fetchCartItems(null);
       }
     });
