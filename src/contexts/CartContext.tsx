@@ -19,6 +19,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const { 
     cartItems, 
     isLoading, 
@@ -36,27 +37,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // First check the current session
     const getCurrentUser = async () => {
       try {
+        setIsAuthChecked(false);
         const { data } = await supabase.auth.getUser();
         const currentUserId = data.user?.id || null;
         console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
         
-        // Only update userId if it has changed
-        if (currentUserId !== userId) {
-          setUserId(currentUserId);
-          
-          // Only fetch cart items if we have a user
-          if (currentUserId) {
-            await fetchCartItems(currentUserId);
-          }
+        setUserId(currentUserId);
+        
+        // Only fetch cart items if we have a user
+        if (currentUserId) {
+          await fetchCartItems(currentUserId);
+        } else {
+          // Clear cart for logged out users
+          await fetchCartItems(null);
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
+      } finally {
+        setIsAuthChecked(true);
       }
     };
 
     getCurrentUser();
 
-    // Then set up the auth state change listener
+    // Set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state change event:", event);
       
@@ -76,6 +80,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           fetchCartItems(null);
         }, 0);
       }
+      setIsAuthChecked(true);
     });
 
     return () => {
@@ -87,7 +92,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     <CartContext.Provider
       value={{
         cartItems,
-        isLoading,
+        isLoading: isLoading || !isAuthChecked,
         error,
         refetchCart,
         addToCart,

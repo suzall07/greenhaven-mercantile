@@ -13,6 +13,7 @@ import IndoorPlants from "@/pages/IndoorPlants";
 import OutdoorPlants from "@/pages/OutdoorPlants";
 import CustomerLogin from "@/pages/CustomerLogin";
 import Cart from "@/pages/Cart";
+import Checkout from "@/pages/Checkout";
 import { ProductDetails } from "@/components/product/ProductDetails";
 
 const queryClient = new QueryClient({
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 60000, // 1 minute
     },
   },
 });
@@ -40,6 +42,7 @@ function App() {
               <Route path="/outdoor-plants" element={<OutdoorPlants />} />
               <Route path="/product/:productId" element={<ProductDetails />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

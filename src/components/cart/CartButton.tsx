@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export const CartButton = () => {
-  const { cartItems, updateQuantity, removeItem } = useCart();
+  const { cartItems, updateQuantity, removeItem, isLoading } = useCart();
   const navigate = useNavigate();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -47,7 +47,7 @@ export const CartButton = () => {
       }
 
       const cartTotal = cartItems.reduce((total, item) => {
-        return total + (item.product.price * item.quantity);
+        return total + ((item.product?.price || 0) * item.quantity);
       }, 0);
 
       const orderId = `order-${Date.now()}`;
@@ -61,6 +61,7 @@ export const CartButton = () => {
         },
       });
     } catch (error: any) {
+      console.error("Payment initialization error:", error);
       toast({
         title: "Payment Error",
         description: error.message || "Failed to initiate payment",
@@ -85,7 +86,7 @@ export const CartButton = () => {
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {cartItems.length > 0 && (
+          {!isLoading && cartItems.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
               {cartItems.length}
             </span>
@@ -96,80 +97,90 @@ export const CartButton = () => {
         <SheetHeader>
           <SheetTitle>Shopping Cart</SheetTitle>
         </SheetHeader>
-        <div className="mt-8 space-y-4">
-          {cartItems.length === 0 ? (
-            <p className="text-center text-muted-foreground">Your cart is empty</p>
-          ) : (
-            <>
-              <div className="max-h-[60vh] overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex space-x-4 items-center mb-4">
-                    <img
-                      src={item.product?.image || ''}
-                      alt={item.product?.name || ''}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.product?.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Rs {item.product?.price}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        >
-                          -
-                        </Button>
-                        <span>{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          +
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <div className="animate-pulse">Loading cart...</div>
+          </div>
+        ) : (
+          <div className="mt-8 space-y-4">
+            {cartItems.length === 0 ? (
+              <p className="text-center text-muted-foreground">Your cart is empty</p>
+            ) : (
+              <>
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {cartItems.map((item) => (
+                    <div key={item.id} className="flex space-x-4 items-center mb-4">
+                      {item.product?.image && (
+                        <img
+                          src={item.product.image}
+                          alt={item.product?.name || ''}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-medium">{item.product?.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Rs {item.product?.price}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            disabled={item.quantity <= 1}
+                          >
+                            -
+                          </Button>
+                          <span>{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            +
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between font-medium">
+                    <span>Total:</span>
+                    <span>Rs {cartTotal.toFixed(2)}</span>
                   </div>
-                ))}
-              </div>
-              <div className="pt-4 border-t">
-                <div className="flex justify-between font-medium">
-                  <span>Total:</span>
-                  <span>Rs {cartTotal.toFixed(2)}</span>
+                  <div className="mt-4 space-y-2">
+                    <Button 
+                      className="w-full"
+                      onClick={handleCheckout}
+                      disabled={isCheckingOut}
+                    >
+                      {isCheckingOut ? "Processing..." : "Checkout with Khalti"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleViewCart}
+                    >
+                      View Cart
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-4 space-y-2">
-                  <Button 
-                    className="w-full"
-                    onClick={handleCheckout}
-                    disabled={isCheckingOut}
-                  >
-                    {isCheckingOut ? "Processing..." : "Checkout with Khalti"}
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleViewCart}
-                  >
-                    View Cart
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

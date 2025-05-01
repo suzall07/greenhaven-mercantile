@@ -8,7 +8,7 @@ export function useCartActions(userId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchCartItems = async (uid: string | null = userId) => {
+  const fetchCartItems = async (uid: string | null = userId): Promise<CartItem[]> => {
     // If no user ID is provided, clear the cart items
     if (!uid) {
       console.log("No user ID provided or user logged out, clearing cart items");
@@ -22,8 +22,8 @@ export function useCartActions(userId: string | null) {
     try {
       const items = await getCartItems(uid);
       console.log("Cart items fetched:", items);
-      setCartItems(items);
-      return items;
+      setCartItems(items || []);
+      return items || [];
     } catch (err: any) {
       console.error("Error fetching cart items:", err);
       setError(err);
@@ -42,7 +42,7 @@ export function useCartActions(userId: string | null) {
     await fetchCartItems();
   };
 
-  const addToCart = async (productId: number, quantity: number) => {
+  const addToCart = async (productId: number, quantity: number): Promise<void> => {
     try {
       if (!userId) {
         toast({
@@ -55,7 +55,7 @@ export function useCartActions(userId: string | null) {
 
       setIsLoading(true);
       await addItemToCart(userId, productId, quantity);
-      await refetchCart();
+      await fetchCartItems();
       
       toast({
         title: "Added to cart",
@@ -63,6 +63,7 @@ export function useCartActions(userId: string | null) {
       });
     } catch (error: any) {
       console.error("Error adding to cart:", error);
+      setError(error);
       toast({
         title: "Error",
         description: error.message || "Failed to add item to cart",
@@ -73,18 +74,19 @@ export function useCartActions(userId: string | null) {
     }
   };
 
-  const updateQuantity = async (cartItemId: number, quantity: number) => {
+  const updateQuantity = async (cartItemId: number, quantity: number): Promise<void> => {
     try {
       setIsLoading(true);
       await updateCartItemQuantity(cartItemId, quantity);
-      await refetchCart();
+      await fetchCartItems();
       
       toast({
         title: "Cart updated",
         description: "Item quantity has been updated",
       });
     } catch (error: any) {
-      setIsLoading(false);
+      console.error("Error updating quantity:", error);
+      setError(error);
       toast({
         title: "Error",
         description: error.message || "Failed to update quantity",
@@ -95,18 +97,19 @@ export function useCartActions(userId: string | null) {
     }
   };
 
-  const removeItem = async (cartItemId: number) => {
+  const removeItem = async (cartItemId: number): Promise<void> => {
     try {
       setIsLoading(true);
       await removeFromCart(cartItemId);
-      await refetchCart();
+      await fetchCartItems();
       
       toast({
         title: "Item removed",
         description: "Item has been removed from cart",
       });
     } catch (error: any) {
-      setIsLoading(false);
+      console.error("Error removing item:", error);
+      setError(error);
       toast({
         title: "Error",
         description: error.message || "Failed to remove item",
@@ -117,7 +120,7 @@ export function useCartActions(userId: string | null) {
     }
   };
 
-  const clearCart = async () => {
+  const clearCart = async (): Promise<void> => {
     if (!userId || cartItems.length === 0) return;
 
     setIsLoading(true);
@@ -131,6 +134,8 @@ export function useCartActions(userId: string | null) {
         description: "All items have been removed from your cart",
       });
     } catch (error: any) {
+      console.error("Error clearing cart:", error);
+      setError(error);
       toast({
         title: "Error",
         description: error.message || "Failed to clear cart",

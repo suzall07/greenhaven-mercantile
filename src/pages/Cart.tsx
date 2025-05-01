@@ -32,10 +32,8 @@ const Cart = () => {
           return;
         }
         
-        console.log("User authenticated, fetching cart");
+        console.log("User authenticated, ready to show cart");
         setIsAuthenticated(true);
-        // Explicitly call refetchCart to ensure we have the latest cart data
-        await refetchCart();
       } catch (error) {
         console.error("Error checking user:", error);
         toast({
@@ -49,7 +47,7 @@ const Cart = () => {
     };
 
     checkUser();
-  }, [navigate, toast, refetchCart]);
+  }, [navigate, toast]);
 
   // Calculate total price safely with null checks
   const totalPrice = cartItems?.reduce(
@@ -66,12 +64,13 @@ const Cart = () => {
     await removeItem(cartItemId);
   };
 
+  // Show loading state if auth check or cart data is loading
   if (isPageLoading || cartLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24 flex items-center justify-center">
-          <div className="animate-pulse text-xl">Loading...</div>
+          <div className="animate-pulse text-xl">Loading your cart...</div>
         </div>
       </div>
     );
@@ -98,7 +97,7 @@ const Cart = () => {
       <div className="container mx-auto px-4 pt-24">
         <h1 className="text-3xl md:text-4xl font-bold mb-6">Your Cart</h1>
 
-        {cartItems?.length ? (
+        {cartItems?.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-sm border">
@@ -108,11 +107,13 @@ const Cart = () => {
                     className="flex flex-col sm:flex-row items-start sm:items-center p-4 border-b last:border-0"
                   >
                     <div className="flex-shrink-0 w-full sm:w-24 h-24 mb-4 sm:mb-0">
-                      <LazyImage
-                        src={item.product?.image || ""}
-                        alt={item.product?.name || ""}
-                        className="w-full h-full object-cover rounded"
-                      />
+                      {item.product?.image && (
+                        <LazyImage
+                          src={item.product.image}
+                          alt={item.product?.name || "Product"}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      )}
                     </div>
 
                     <div className="flex-1 px-4">
