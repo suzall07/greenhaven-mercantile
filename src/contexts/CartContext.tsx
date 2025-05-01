@@ -3,7 +3,6 @@ import { createContext, useState, useContext, useEffect, ReactNode } from 'react
 import { supabase } from '@/lib/supabase';
 import { useCartActions } from '@/hooks/useCartActions';
 import { CartContextType } from '@/types/cart';
-import { CartItem } from '@/lib/supabase';
 
 // Default values for the context
 const defaultCartContext: CartContextType = {
@@ -25,7 +24,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   
-  // Custom cart actions hook - only using it AFTER the component has mounted
+  // Initialize useCartActions with userId
   const { 
     cartItems, 
     isLoading, 
@@ -53,14 +52,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         
         if (isMounted) {
           setUserId(currentUserId);
-          
-          // Only fetch cart items if we have a user
-          if (currentUserId) {
-            await fetchCartItems(currentUserId);
-          } else {
-            // Clear cart for logged out users
-            await fetchCartItems(null);
-          }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
@@ -80,20 +71,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_IN' && session?.user?.id) {
         console.log("User signed in with ID:", session.user.id);
         setUserId(session.user.id);
-        
-        // Use setTimeout to avoid potential React state update conflicts
-        setTimeout(() => {
-          if (isMounted) fetchCartItems(session.user.id);
-        }, 0);
       } 
       else if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing user ID and cart");
         setUserId(null);
-        
-        // Use setTimeout to avoid potential React state update conflicts
-        setTimeout(() => {
-          if (isMounted) fetchCartItems(null);
-        }, 0);
       }
       
       setIsAuthChecked(true);
@@ -103,7 +84,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchCartItems]);
+  }, []);
 
   // Create the context value
   const cartContextValue: CartContextType = {

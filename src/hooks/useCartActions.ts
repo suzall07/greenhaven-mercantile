@@ -1,15 +1,21 @@
 
-import { useState, useCallback } from 'react';
-import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart, supabase } from '@/lib/supabase';
+import { useState, useCallback, useEffect } from 'react';
+import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
 // This hook should only be used within React functional components
-export function useCartActions(userId: string | null) {
+export function useCartActions(initialUserId: string | null) {
+  const [userId, setUserId] = useState<string | null>(initialUserId);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchCartItems = useCallback(async (uid: string | null = userId): Promise<CartItem[]> => {
+  // Update userId when it changes from props
+  useEffect(() => {
+    setUserId(initialUserId);
+  }, [initialUserId]);
+
+  const fetchCartItems = useCallback(async (uid: string | null = userId) => {
     // If no user ID is provided, clear the cart items
     if (!uid) {
       console.log("No user ID provided or user logged out, clearing cart items");
@@ -38,6 +44,15 @@ export function useCartActions(userId: string | null) {
       setIsLoading(false);
     }
   }, [userId]);
+
+  // Fetch cart items when userId changes
+  useEffect(() => {
+    if (userId) {
+      fetchCartItems(userId);
+    } else {
+      setCartItems([]);
+    }
+  }, [userId, fetchCartItems]);
 
   const refetchCart = useCallback(async (): Promise<void> => {
     await fetchCartItems();
