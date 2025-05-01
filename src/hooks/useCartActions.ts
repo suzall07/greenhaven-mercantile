@@ -1,14 +1,15 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart, supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
+// This hook should only be used within React functional components
 export function useCartActions(userId: string | null) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchCartItems = async (uid: string | null = userId): Promise<CartItem[]> => {
+  const fetchCartItems = useCallback(async (uid: string | null = userId): Promise<CartItem[]> => {
     // If no user ID is provided, clear the cart items
     if (!uid) {
       console.log("No user ID provided or user logged out, clearing cart items");
@@ -36,13 +37,13 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
-  const refetchCart = async (): Promise<void> => {
+  const refetchCart = useCallback(async (): Promise<void> => {
     await fetchCartItems();
-  };
+  }, [fetchCartItems]);
 
-  const addToCart = async (productId: number, quantity: number): Promise<void> => {
+  const addToCart = useCallback(async (productId: number, quantity: number): Promise<void> => {
     try {
       if (!userId) {
         toast({
@@ -72,9 +73,9 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, fetchCartItems]);
 
-  const updateQuantity = async (cartItemId: number, quantity: number): Promise<void> => {
+  const updateQuantity = useCallback(async (cartItemId: number, quantity: number): Promise<void> => {
     try {
       setIsLoading(true);
       await updateCartItemQuantity(cartItemId, quantity);
@@ -95,9 +96,9 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchCartItems]);
 
-  const removeItem = async (cartItemId: number): Promise<void> => {
+  const removeItem = useCallback(async (cartItemId: number): Promise<void> => {
     try {
       setIsLoading(true);
       await removeFromCart(cartItemId);
@@ -118,9 +119,9 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchCartItems]);
 
-  const clearCart = async (): Promise<void> => {
+  const clearCart = useCallback(async (): Promise<void> => {
     if (!userId || cartItems.length === 0) return;
 
     setIsLoading(true);
@@ -144,7 +145,7 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, cartItems]);
 
   return {
     cartItems,
