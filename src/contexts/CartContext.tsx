@@ -39,11 +39,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await supabase.auth.getUser();
         const currentUserId = data.user?.id || null;
         console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
-        setUserId(currentUserId);
         
-        // Only fetch cart items if we have a user
-        if (currentUserId) {
-          fetchCartItems(currentUserId);
+        // Only update userId if it has changed
+        if (currentUserId !== userId) {
+          setUserId(currentUserId);
+          
+          // Only fetch cart items if we have a user
+          if (currentUserId) {
+            await fetchCartItems(currentUserId);
+          }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
@@ -59,12 +63,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_IN' && session?.user?.id) {
         console.log("User signed in with ID:", session.user.id);
         setUserId(session.user.id);
-        fetchCartItems(session.user.id);
+        // Use setTimeout to avoid potential deadlocks
+        setTimeout(() => {
+          fetchCartItems(session.user.id);
+        }, 0);
       } 
       else if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing user ID and cart");
         setUserId(null);
-        fetchCartItems(null);
+        // Use setTimeout to avoid potential deadlocks
+        setTimeout(() => {
+          fetchCartItems(null);
+        }, 0);
       }
     });
 

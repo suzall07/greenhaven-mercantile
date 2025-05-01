@@ -40,7 +40,6 @@ export function useCartActions(userId: string | null) {
 
   const refetchCart = async (): Promise<void> => {
     await fetchCartItems();
-    // Return void explicitly
   };
 
   const addToCart = async (productId: number, quantity: number) => {
@@ -57,20 +56,20 @@ export function useCartActions(userId: string | null) {
       setIsLoading(true);
       await addItemToCart(userId, productId, quantity);
       await refetchCart();
-      setIsLoading(false);
       
       toast({
         title: "Added to cart",
         description: "Item has been added to your cart",
       });
     } catch (error: any) {
-      setIsLoading(false);
       console.error("Error adding to cart:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add item to cart",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,7 +78,6 @@ export function useCartActions(userId: string | null) {
       setIsLoading(true);
       await updateCartItemQuantity(cartItemId, quantity);
       await refetchCart();
-      setIsLoading(false);
       
       toast({
         title: "Cart updated",
@@ -92,6 +90,8 @@ export function useCartActions(userId: string | null) {
         description: error.message || "Failed to update quantity",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,7 +100,6 @@ export function useCartActions(userId: string | null) {
       setIsLoading(true);
       await removeFromCart(cartItemId);
       await refetchCart();
-      setIsLoading(false);
       
       toast({
         title: "Item removed",
@@ -113,6 +112,8 @@ export function useCartActions(userId: string | null) {
         description: error.message || "Failed to remove item",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

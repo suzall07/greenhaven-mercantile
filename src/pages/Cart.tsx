@@ -34,6 +34,7 @@ const Cart = () => {
         
         console.log("User authenticated, fetching cart");
         setIsAuthenticated(true);
+        // Explicitly call refetchCart to ensure we have the latest cart data
         await refetchCart();
       } catch (error) {
         console.error("Error checking user:", error);
@@ -50,9 +51,9 @@ const Cart = () => {
     checkUser();
   }, [navigate, toast, refetchCart]);
 
-  // Calculate total price
+  // Calculate total price safely with null checks
   const totalPrice = cartItems?.reduce(
-    (sum, item) => sum + (item.product?.price || 0) * item.quantity,
+    (sum, item) => sum + ((item.product?.price || 0) * item.quantity),
     0
   ) || 0;
 
@@ -115,12 +116,12 @@ const Cart = () => {
                     </div>
 
                     <div className="flex-1 px-4">
-                      <h3 className="font-medium">{item.product?.name}</h3>
+                      <h3 className="font-medium">{item.product?.name || "Product"}</h3>
                       <p className="text-muted-foreground text-sm">
-                        {item.product?.category}
+                        {item.product?.category || "Category"}
                       </p>
                       <p className="text-primary font-medium mt-1">
-                        Rs {item.product?.price}
+                        Rs {item.product?.price || 0}
                       </p>
                     </div>
 
@@ -183,7 +184,13 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full" onClick={() => navigate("/checkout")}>Proceed to Checkout</Button>
+                <Button 
+                  className="w-full" 
+                  onClick={() => navigate("/checkout")}
+                  disabled={cartItems.length === 0}
+                >
+                  Proceed to Checkout
+                </Button>
               </div>
             </div>
           </div>
