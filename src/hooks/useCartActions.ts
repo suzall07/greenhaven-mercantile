@@ -38,8 +38,9 @@ export function useCartActions(userId: string | null) {
     }
   };
 
-  const refetchCart = async () => {
-    return await fetchCartItems();
+  const refetchCart = async (): Promise<void> => {
+    await fetchCartItems();
+    // Return void explicitly
   };
 
   const addToCart = async (productId: number, quantity: number) => {
