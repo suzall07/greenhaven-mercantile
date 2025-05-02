@@ -17,6 +17,7 @@ import Checkout from "@/pages/Checkout";
 import { ProductDetails } from "@/components/product/ProductDetails";
 import { StrictMode } from "react";
 
+// Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

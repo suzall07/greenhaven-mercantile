@@ -8,11 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 import { useCart } from "@/contexts/CartContext";
+import { useState } from "react";
 
 const IndoorPlants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
   
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
@@ -25,11 +27,14 @@ const IndoorPlants = () => {
 
   const handleAddToCart = async (productId: number) => {
     try {
+      setAddingToCart(productId);
       await addToCart(productId, 1);
+      setAddingToCart(null);
     } catch (error: any) {
+      setAddingToCart(null);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Could not add to cart",
         variant: "destructive",
       });
     }
@@ -68,8 +73,9 @@ const IndoorPlants = () => {
                     <Button 
                       className="flex-1"
                       onClick={() => handleAddToCart(product.id)}
+                      disabled={addingToCart === product.id}
                     >
-                      Add to Cart
+                      {addingToCart === product.id ? "Adding..." : "Add to Cart"}
                     </Button>
                     <Button
                       variant="outline"

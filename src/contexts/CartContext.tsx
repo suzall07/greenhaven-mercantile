@@ -29,7 +29,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     cartItems, 
     isLoading, 
     error, 
-    fetchCartItems, 
     refetchCart, 
     addToCart, 
     updateQuantity, 
@@ -47,15 +46,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         if (isMounted) setIsAuthChecked(false);
         
         const { data } = await supabase.auth.getUser();
-        const currentUserId = data.user?.id || null;
-        console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
+        const currentUserId = data?.user?.id || null;
         
         if (isMounted) {
+          console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
           setUserId(currentUserId);
+          setIsAuthChecked(true);
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
-      } finally {
         if (isMounted) setIsAuthChecked(true);
       }
     };
