@@ -43,8 +43,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // First check the current session
     const getCurrentUser = async () => {
       try {
-        if (isMounted) setIsAuthChecked(false);
-        
         const { data } = await supabase.auth.getUser();
         const currentUserId = data?.user?.id || null;
         
@@ -63,8 +61,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // Set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change event:", event);
-      
       if (!isMounted) return;
       
       if (event === 'SIGNED_IN' && session?.user?.id) {
@@ -75,8 +71,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         console.log("User signed out, clearing user ID and cart");
         setUserId(null);
       }
-      
-      setIsAuthChecked(true);
     });
 
     return () => {
