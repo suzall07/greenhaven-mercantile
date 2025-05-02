@@ -56,7 +56,7 @@ export function useCartActions(initialUserId: string | null) {
   }, [userId, fetchCartItems]);
 
   const refetchCart = useCallback(async () => {
-    return fetchCartItems();
+    return await fetchCartItems();
   }, [fetchCartItems]);
 
   const addToCart = useCallback(async (productId: number, quantity: number) => {

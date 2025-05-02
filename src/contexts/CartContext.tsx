@@ -66,10 +66,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (event === 'SIGNED_IN' && session?.user?.id) {
         console.log("User signed in with ID:", session.user.id);
         setUserId(session.user.id);
+        setIsAuthChecked(true);
       } 
       else if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing user ID and cart");
         setUserId(null);
+        setIsAuthChecked(true);
       }
     });
 
