@@ -27,7 +27,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Initialize useCartActions with userId
   const { 
     cartItems, 
-    isLoading, 
+    isLoading: cartLoading, 
     error, 
     refetchCart, 
     addToCart, 
@@ -63,6 +63,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
       
+      console.log("Auth state change:", event);
+      
       if (event === 'SIGNED_IN' && session?.user?.id) {
         console.log("User signed in with ID:", session.user.id);
         setUserId(session.user.id);
@@ -71,6 +73,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       else if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing user ID and cart");
         setUserId(null);
+        setIsAuthChecked(true);
+      }
+      else {
+        // For any other events, ensure auth is considered checked
         setIsAuthChecked(true);
       }
     });
@@ -84,7 +90,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Create the context value
   const cartContextValue: CartContextType = {
     cartItems,
-    isLoading: isLoading || !isAuthChecked,
+    isLoading: cartLoading || !isAuthChecked,
     error,
     refetchCart,
     addToCart,

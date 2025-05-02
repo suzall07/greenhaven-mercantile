@@ -13,7 +13,7 @@ import { useState } from "react";
 const OutdoorPlants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, isLoading: cartLoading } = useCart();
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
   
   const { data: products, isLoading } = useQuery({
@@ -29,14 +29,15 @@ const OutdoorPlants = () => {
     try {
       setAddingToCart(productId);
       await addToCart(productId, 1);
-      setAddingToCart(null);
     } catch (error: any) {
-      setAddingToCart(null);
+      console.error("Error adding to cart:", error);
       toast({
         title: "Error",
         description: error.message || "Could not add to cart",
         variant: "destructive",
       });
+    } finally {
+      setAddingToCart(null);
     }
   };
 
@@ -73,7 +74,7 @@ const OutdoorPlants = () => {
                     <Button 
                       className="flex-1"
                       onClick={() => handleAddToCart(product.id)}
-                      disabled={addingToCart === product.id}
+                      disabled={addingToCart === product.id || cartLoading}
                     >
                       {addingToCart === product.id ? "Adding..." : "Add to Cart"}
                     </Button>

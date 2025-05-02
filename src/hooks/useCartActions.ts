@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -8,15 +8,25 @@ export function useCartActions(initialUserId: string | null) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Use ref to track ongoing operations and prevent race conditions
+  const isFetchingRef = useRef(false);
 
   // Update userId when it changes from props
   useEffect(() => {
     if (initialUserId !== userId) {
+      console.log("userId updated in useCartActions:", initialUserId);
       setUserId(initialUserId);
     }
   }, [initialUserId, userId]);
 
   const fetchCartItems = useCallback(async () => {
+    // If already fetching, don't start another fetch
+    if (isFetchingRef.current) {
+      console.log("Fetch already in progress, skipping");
+      return cartItems;
+    }
+
     // If no user ID is provided, clear the cart items
     if (!userId) {
       console.log("No user ID provided or user logged out, clearing cart items");
@@ -24,10 +34,12 @@ export function useCartActions(initialUserId: string | null) {
       return [];
     }
 
+    isFetchingRef.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log("Fetching cart items for user:", userId);
       const items = await getCartItems(userId);
       console.log("Cart items fetched:", items);
       setCartItems(items || []);
@@ -43,13 +55,17 @@ export function useCartActions(initialUserId: string | null) {
       return [];
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [userId]);
+  }, [userId, cartItems]);
 
   // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
-      fetchCartItems();
+      console.log("User ID changed, fetching cart items");
+      fetchCartItems().catch(err => {
+        console.error("Failed to fetch cart items on userId change:", err);
+      });
     } else {
       setCartItems([]);
     }
