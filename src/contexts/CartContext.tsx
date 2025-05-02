@@ -9,7 +9,7 @@ const defaultCartContext: CartContextType = {
   cartItems: [],
   isLoading: false,
   error: null,
-  refetchCart: async () => {},
+  refetchCart: async () => [],
   addToCart: async () => {},
   updateQuantity: async () => {},
   removeItem: async () => {},

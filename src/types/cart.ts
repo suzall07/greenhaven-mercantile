@@ -5,7 +5,7 @@ export interface CartContextType {
   cartItems: CartItem[];
   isLoading: boolean;
   error: Error | null;
-  refetchCart: () => Promise<void>;
+  refetchCart: () => Promise<CartItem[]>;
   addToCart: (productId: number, quantity: number) => Promise<void>;
   updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
   removeItem: (cartItemId: number) => Promise<void>;
