@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
-// This hook should only be used within React functional components
 export function useCartActions(initialUserId: string | null) {
   const [userId, setUserId] = useState<string | null>(initialUserId);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);

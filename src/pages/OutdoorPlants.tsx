@@ -3,14 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { getProducts, addToCart, supabase } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
+import { useCart } from "@/contexts/CartContext";
+import { useState } from "react";
 
 const OutdoorPlants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
+  
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
@@ -22,25 +27,14 @@ const OutdoorPlants = () => {
 
   const handleAddToCart = async (productId: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Please sign in",
-          description: "You need to be signed in to add items to cart",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await addToCart(user.id, productId, 1);
-      toast({
-        title: "Added to cart",
-        description: "Item has been added to your cart",
-      });
+      setAddingToCart(productId);
+      await addToCart(productId, 1);
+      setAddingToCart(null);
     } catch (error: any) {
+      setAddingToCart(null);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Could not add to cart",
         variant: "destructive",
       });
     }
@@ -79,8 +73,9 @@ const OutdoorPlants = () => {
                     <Button 
                       className="flex-1"
                       onClick={() => handleAddToCart(product.id)}
+                      disabled={addingToCart === product.id}
                     >
-                      Add to Cart
+                      {addingToCart === product.id ? "Adding..." : "Add to Cart"}
                     </Button>
                     <Button
                       variant="outline"
