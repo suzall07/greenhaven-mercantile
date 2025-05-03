@@ -1,89 +1,35 @@
 
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
-import { initiateKhaltiPayment } from "@/lib/khalti";
-import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 export const CartButton = () => {
-  const { cartItems, updateQuantity, removeItem, isLoading } = useCart();
+  const { cartItems, removeItem, isLoading } = useCart();
   const navigate = useNavigate();
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const handleCheckout = async () => {
-    try {
-      setIsCheckingOut(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Please sign in",
-          description: "You need to be signed in to checkout",
-          variant: "destructive",
-        });
-        setIsCartOpen(false);
-        navigate('/login');
-        return;
-      }
-
-      if (cartItems.length === 0) {
-        toast({
-          title: "Empty cart",
-          description: "Your cart is empty. Add items before checking out.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const cartTotal = cartItems.reduce((total, item) => {
-        return total + ((item.product?.price || 0) * item.quantity);
-      }, 0);
-
-      const orderId = `order-${Date.now()}`;
-      await initiateKhaltiPayment({
-        amount: cartTotal,
-        purchaseOrderId: orderId,
-        purchaseOrderName: `Cart Checkout - ${orderId}`,
-        customerInfo: {
-          name: user.email?.split('@')[0] || 'Customer',
-          email: user.email || '',
-        },
-      });
-    } catch (error: any) {
-      console.error("Payment initialization error:", error);
-      toast({
-        title: "Payment Error",
-        description: error.message || "Failed to initiate payment",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCheckingOut(false);
-    }
-  };
-
-  const cartTotal = cartItems.reduce((total, item) => {
-    return total + ((item.product?.price || 0) * item.quantity);
-  }, 0);
 
   const handleViewCart = () => {
     setIsCartOpen(false);
     navigate('/cart');
   };
 
+  const cartTotal = cartItems.reduce((total, item) => {
+    return total + ((item.product?.price || 0) * item.quantity);
+  }, 0);
+
   return (
-    <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-      <SheetTrigger asChild>
+    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
+      <DrawerTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
           {!isLoading && cartItems.length > 0 && (
@@ -92,96 +38,64 @@ export const CartButton = () => {
             </span>
           )}
         </Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Shopping Cart</SheetTitle>
-        </SheetHeader>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle className="text-center">Your Cart</DrawerTitle>
+        </DrawerHeader>
         
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-pulse">Loading cart...</div>
-          </div>
-        ) : (
-          <div className="mt-8 space-y-4">
-            {cartItems.length === 0 ? (
-              <p className="text-center text-muted-foreground">Your cart is empty</p>
-            ) : (
-              <>
-                <div className="max-h-[60vh] overflow-y-auto">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex space-x-4 items-center mb-4">
-                      {item.product?.image && (
-                        <img
-                          src={item.product.image}
-                          alt={item.product?.name || ''}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.product?.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Rs {item.product?.price}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                            disabled={item.quantity <= 1}
-                          >
-                            -
-                          </Button>
-                          <span>{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
-                            +
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive"
-                            onClick={() => removeItem(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <p className="text-sm text-muted-foreground">Loading cart...</p>
+            </div>
+          ) : cartItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Your cart is empty</p>
+          ) : (
+            <div className="space-y-4">
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 border-b pb-3">
+                  {item.product?.image && (
+                    <img
+                      src={item.product.image}
+                      alt={item.product?.name || ''}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{item.product?.name}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {item.quantity} × Rs {item.product?.price}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-red-500"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
-                  ))}
-                </div>
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between font-medium">
-                    <span>Total:</span>
-                    <span>Rs {cartTotal.toFixed(2)}</span>
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <Button 
-                      className="w-full"
-                      onClick={handleCheckout}
-                      disabled={isCheckingOut}
-                    >
-                      {isCheckingOut ? "Processing..." : "Checkout with Khalti"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleViewCart}
-                    >
-                      View Cart
-                    </Button>
                   </div>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {cartItems.length > 0 && (
+          <div className="p-4 border-t">
+            <div className="flex justify-between mb-4">
+              <span className="font-medium">Total:</span>
+              <span className="font-medium">Rs {cartTotal.toFixed(2)}</span>
+            </div>
+            <Button onClick={handleViewCart} className="w-full">
+              View Cart
+            </Button>
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 };

@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { useCartActions } from '@/hooks/useCartActions';
 import { CartContextType } from '@/types/cart';
 
-// Default values for the context
 const defaultCartContext: CartContextType = {
   cartItems: [],
   isLoading: false,
@@ -24,7 +23,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   
-  // Initialize useCartActions with userId
   const { 
     cartItems, 
     isLoading: cartLoading, 
@@ -38,69 +36,45 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Check for authenticated user
   useEffect(() => {
-    let isMounted = true;
-    
-    // First check the current session
-    const getCurrentUser = async () => {
+    const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        const currentUserId = data?.user?.id || null;
-        
-        if (isMounted) {
-          console.log("Current auth state:", currentUserId ? "User logged in" : "No user");
-          setUserId(currentUserId);
-          setIsAuthChecked(true);
-        }
-      } catch (error) {
-        console.error("Error checking auth state:", error);
-        if (isMounted) setIsAuthChecked(true);
+        setUserId(data?.user?.id || null);
+      } finally {
+        setIsAuthChecked(true);
       }
     };
 
-    getCurrentUser();
-
-    // Set up the auth state change listener
+    checkAuth();
+    
+    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isMounted) return;
-      
-      console.log("Auth state change:", event);
-      
-      if (event === 'SIGNED_IN' && session?.user?.id) {
-        console.log("User signed in with ID:", session.user.id);
-        setUserId(session.user.id);
-        setIsAuthChecked(true);
+      if (event === 'SIGNED_IN') {
+        setUserId(session?.user?.id || null);
       } 
       else if (event === 'SIGNED_OUT') {
-        console.log("User signed out, clearing user ID and cart");
         setUserId(null);
-        setIsAuthChecked(true);
       }
-      else {
-        // For any other events, ensure auth is considered checked
-        setIsAuthChecked(true);
-      }
+      
+      setIsAuthChecked(true);
     });
 
     return () => {
-      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  // Create the context value
-  const cartContextValue: CartContextType = {
-    cartItems,
-    isLoading: cartLoading || !isAuthChecked,
-    error,
-    refetchCart,
-    addToCart,
-    updateQuantity,
-    removeItem,
-    clearCart,
-  };
-
   return (
-    <CartContext.Provider value={cartContextValue}>
+    <CartContext.Provider value={{
+      cartItems,
+      isLoading: cartLoading || !isAuthChecked,
+      error,
+      refetchCart,
+      addToCart,
+      updateQuantity,
+      removeItem,
+      clearCart,
+    }}>
       {children}
     </CartContext.Provider>
   );
