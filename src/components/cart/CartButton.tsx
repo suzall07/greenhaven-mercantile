@@ -23,6 +23,7 @@ export const CartButton = () => {
     navigate('/cart');
   };
 
+  // Calculate cart total
   const cartTotal = cartItems.reduce((total, item) => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
@@ -46,11 +47,11 @@ export const CartButton = () => {
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <p className="text-sm text-muted-foreground">Loading cart...</p>
+            <div className="flex justify-center py-6">
+              <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
           ) : cartItems.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Your cart is empty</p>
+            <p className="text-center text-muted-foreground py-6">Your cart is empty</p>
           ) : (
             <div className="space-y-4">
               {cartItems.map((item) => (
