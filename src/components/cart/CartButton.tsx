@@ -2,7 +2,7 @@
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -17,6 +17,14 @@ export const CartButton = () => {
   const { cartItems, removeItem, isLoading } = useCart();
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(0);
+
+  // Update displayed count with animation
+  useEffect(() => {
+    if (!isLoading) {
+      setDisplayedCount(cartItems.length);
+    }
+  }, [cartItems.length, isLoading]);
 
   const handleViewCart = () => {
     setIsCartOpen(false);
@@ -33,9 +41,9 @@ export const CartButton = () => {
       <DrawerTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {!isLoading && cartItems.length > 0 && (
+          {!isLoading && displayedCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {cartItems.length}
+              {displayedCount}
             </span>
           )}
         </Button>
@@ -47,8 +55,10 @@ export const CartButton = () => {
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           {isLoading ? (
-            <div className="flex justify-center py-6">
-              <p className="text-sm text-muted-foreground">Loading...</p>
+            <div className="animate-pulse space-y-4">
+              <div className="h-16 bg-gray-200 rounded"></div>
+              <div className="h-16 bg-gray-200 rounded"></div>
+              <div className="h-16 bg-gray-200 rounded"></div>
             </div>
           ) : cartItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-6">Your cart is empty</p>

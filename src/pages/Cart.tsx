@@ -26,21 +26,29 @@ const Cart = () => {
         });
         navigate("/login");
       } else {
-        // Only fetch cart if user is authenticated
-        refetchCart();
+        // Fetch cart items if user is authenticated
+        await refetchCart();
       }
     };
 
     checkAuth();
   }, [navigate, toast, refetchCart]);
 
-  // Show simple loading state
+  // Show loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24 flex justify-center">
-          <div className="animate-pulse text-xl">Loading your cart...</div>
+          <div className="w-full max-w-3xl">
+            <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+            <div className="animate-pulse space-y-4">
+              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+              <div className="h-40 bg-gray-200 rounded mt-8"></div>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -21,7 +21,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   
   const { 
     cartItems, 
@@ -41,7 +41,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const { data } = await supabase.auth.getUser();
         setUserId(data?.user?.id || null);
       } finally {
-        setIsAuthReady(true);
+        setAuthChecked(true);
       }
     };
 
@@ -50,7 +50,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUserId(session?.user?.id || null);
-      setIsAuthReady(true);
     });
 
     return () => {
@@ -61,7 +60,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   return (
     <CartContext.Provider value={{
       cartItems,
-      isLoading: cartLoading || !isAuthReady,
+      isLoading: cartLoading || !authChecked,
       error,
       refetchCart,
       addToCart,

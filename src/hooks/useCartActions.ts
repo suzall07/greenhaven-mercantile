@@ -7,15 +7,17 @@ export function useCartActions(userId: string | null) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchCartItems = useCallback(async () => {
-    // Don't fetch if already fetching or no userId
-    if (isFetching || !userId) {
+    if (!userId) {
+      return [];
+    }
+
+    if (isLoading) {
       return cartItems;
     }
 
-    setIsFetching(true);
     setIsLoading(true);
     
     try {
@@ -28,16 +30,18 @@ export function useCartActions(userId: string | null) {
       return [];
     } finally {
       setIsLoading(false);
-      setIsFetching(false);
     }
-  }, [userId, cartItems, isFetching]);
+  }, [userId, cartItems, isLoading]);
 
   // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
-      fetchCartItems();
+      fetchCartItems().then(() => {
+        setIsInitialized(true);
+      });
     } else {
       setCartItems([]);
+      setIsInitialized(true);
     }
   }, [userId, fetchCartItems]);
 
@@ -59,8 +63,9 @@ export function useCartActions(userId: string | null) {
     
     try {
       await addItemToCart(userId, productId, quantity);
-      await fetchCartItems();
+      const updatedItems = await fetchCartItems();
       toast({ title: "Added to cart" });
+      return updatedItems;
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       setError(error);
@@ -139,6 +144,7 @@ export function useCartActions(userId: string | null) {
     addToCart,
     updateQuantity,
     removeItem,
-    clearCart
+    clearCart,
+    isInitialized
   };
 }

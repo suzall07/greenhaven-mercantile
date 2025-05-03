@@ -37,7 +37,7 @@ const OutdoorPlants = () => {
         variant: "destructive",
       });
     } finally {
-      setAddingToCart(null);
+      setTimeout(() => setAddingToCart(null), 500);
     }
   };
 
@@ -49,13 +49,27 @@ const OutdoorPlants = () => {
         <h1 className="text-3xl md:text-4xl font-bold mb-6 animate-fadeIn">Outdoor Plants</h1>
         
         {isLoading ? (
-          <div className="text-center">Loading...</div>
+          <div className="text-center py-12">
+            <div className="animate-pulse flex space-x-4 justify-center">
+              <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+              <div className="flex-1 space-y-6 py-1 max-w-md">
+                <div className="h-2 bg-slate-200 rounded"></div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                    <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {outdoorPlants?.map((product, index) => (
               <div
                 key={product.id}
-                className="product-card"
+                className="product-card bg-white rounded-lg shadow-md p-4 transition-transform duration-200 hover:scale-[1.02]"
                 style={{ animationDelay: `${0.2 * index}s` }}
               >
                 <LazyImage
@@ -68,7 +82,7 @@ const OutdoorPlants = () => {
                     {product.category}
                   </span>
                   <h3 className="text-lg font-semibold">{product.name}</h3>
-                  <p className="text-muted-foreground">{product.description}</p>
+                  <p className="text-muted-foreground line-clamp-2">{product.description}</p>
                   <p className="text-primary font-medium">Rs {product.price}</p>
                   <div className="flex gap-2">
                     <Button 
