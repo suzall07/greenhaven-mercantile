@@ -8,20 +8,25 @@ export function useCartActions(userId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchCartItems = useCallback(async () => {
     if (!userId) {
+      setCartItems([]);
       return [];
     }
 
-    if (isLoading) {
+    if (isFetching) {
       return cartItems;
     }
 
+    setIsFetching(true);
     setIsLoading(true);
     
     try {
+      console.log("Fetching cart items for user:", userId);
       const items = await getCartItems(userId);
+      console.log("Cart items fetched:", items);
       setCartItems(items || []);
       return items || [];
     } catch (err: any) {
@@ -30,8 +35,9 @@ export function useCartActions(userId: string | null) {
       return [];
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
-  }, [userId, cartItems, isLoading]);
+  }, [userId, cartItems, isFetching]);
 
   // Fetch cart items when userId changes
   useEffect(() => {
@@ -56,12 +62,13 @@ export function useCartActions(userId: string | null) {
         description: "You need to be signed in to add items",
         variant: "destructive",
       });
-      return;
+      return [];
     }
 
     setIsLoading(true);
     
     try {
+      console.log("Adding to cart:", productId, quantity);
       await addItemToCart(userId, productId, quantity);
       const updatedItems = await fetchCartItems();
       toast({ title: "Added to cart" });
@@ -74,12 +81,15 @@ export function useCartActions(userId: string | null) {
         description: "Could not add item to cart",
         variant: "destructive",
       });
+      return [];
     } finally {
       setIsLoading(false);
     }
   }, [userId, fetchCartItems]);
 
   const updateQuantity = useCallback(async (cartItemId: number, quantity: number) => {
+    if (quantity < 1) return;
+    
     setIsLoading(true);
     
     try {
@@ -104,6 +114,10 @@ export function useCartActions(userId: string | null) {
     try {
       await removeFromCart(cartItemId);
       await fetchCartItems();
+      toast({
+        title: "Item removed",
+        description: "Item removed from cart",
+      });
     } catch (error: any) {
       console.error("Error removing item:", error);
       setError(error);

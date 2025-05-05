@@ -14,17 +14,17 @@ import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const CartButton = () => {
-  const { cartItems, removeItem, isLoading } = useCart();
+  const { cartItems, removeItem, isLoading, refetchCart } = useCart();
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(0);
-
+  
   // Update displayed count with animation
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && cartItems && cartItems.length >= 0) {
       setDisplayedCount(cartItems.length);
     }
-  }, [cartItems.length, isLoading]);
+  }, [cartItems, isLoading]);
 
   const handleViewCart = () => {
     setIsCartOpen(false);
@@ -36,8 +36,16 @@ export const CartButton = () => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
 
+  // Handle drawer open to refresh cart data
+  const handleDrawerOpen = (open: boolean) => {
+    if (open) {
+      refetchCart();
+    }
+    setIsCartOpen(open);
+  };
+
   return (
-    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
+    <Drawer open={isCartOpen} onOpenChange={handleDrawerOpen}>
       <DrawerTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />

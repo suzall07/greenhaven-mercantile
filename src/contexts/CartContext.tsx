@@ -28,10 +28,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     isLoading: cartLoading, 
     error, 
     refetchCart, 
-    addToCart, 
+    addToCart: addCartItem, 
     updateQuantity, 
     removeItem, 
-    clearCart 
+    clearCart,
+    isInitialized 
   } = useCartActions(userId);
 
   // Simplified auth check
@@ -57,10 +58,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  // Fix: Wrap the addCartItem function to match the expected return type
+  const addToCart = async (productId: number, quantity: number) => {
+    await addCartItem(productId, quantity);
+  };
+
   return (
     <CartContext.Provider value={{
       cartItems,
-      isLoading: cartLoading || !authChecked,
+      isLoading: cartLoading || !authChecked || !isInitialized,
       error,
       refetchCart,
       addToCart,
