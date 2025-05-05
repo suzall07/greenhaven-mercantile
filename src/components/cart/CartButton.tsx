@@ -36,9 +36,10 @@ export const CartButton = () => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
 
-  // Handle drawer open to refresh cart data
+  // Handle drawer open to refresh cart data once
   const handleDrawerOpen = (open: boolean) => {
     if (open) {
+      // Only refetch if opening the drawer
       refetchCart();
     }
     setIsCartOpen(open);

@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -8,7 +8,7 @@ export function useCartActions(userId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const isFetchingRef = useRef(false);
 
   const fetchCartItems = useCallback(async () => {
     if (!userId) {
@@ -16,11 +16,11 @@ export function useCartActions(userId: string | null) {
       return [];
     }
 
-    if (isFetching) {
+    if (isFetchingRef.current) {
       return cartItems;
     }
 
-    setIsFetching(true);
+    isFetchingRef.current = true;
     setIsLoading(true);
     
     try {
@@ -35,23 +35,32 @@ export function useCartActions(userId: string | null) {
       return [];
     } finally {
       setIsLoading(false);
-      setIsFetching(false);
+      isFetchingRef.current = false;
     }
-  }, [userId, cartItems, isFetching]);
+  }, [userId, cartItems]);
 
-  // Fetch cart items when userId changes
+  // Fix: Use a ref to track initialization
+  const initializedRef = useRef(false);
+  
+  // Fetch cart items when userId changes, with safeguards against loops
   useEffect(() => {
+    if (initializedRef.current) return;
+    
     if (userId) {
       fetchCartItems().then(() => {
         setIsInitialized(true);
+        initializedRef.current = true;
       });
     } else {
       setCartItems([]);
       setIsInitialized(true);
+      initializedRef.current = true;
     }
   }, [userId, fetchCartItems]);
 
   const refetchCart = useCallback(async () => {
+    // Reset the initialization flag to allow refetching
+    initializedRef.current = false;
     return await fetchCartItems();
   }, [fetchCartItems]);
 

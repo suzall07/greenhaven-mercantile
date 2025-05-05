@@ -15,16 +15,19 @@ const Cart = () => {
   const navigate = useNavigate();
   const { cartItems, updateQuantity, removeItem, isLoading, error, refetchCart } = useCart();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   
   // Check authentication once
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
           console.error("Auth error:", error);
-          setAuthError("Authentication error. Please try logging in again.");
+          if (isMounted) setAuthError("Authentication error. Please try logging in again.");
           return;
         }
         
@@ -40,14 +43,22 @@ const Cart = () => {
         
         // Fetch cart items if user is authenticated
         console.log("User authenticated, fetching cart");
-        await refetchCart();
+        if (isMounted) {
+          await refetchCart();
+        }
       } catch (err) {
         console.error("Error checking auth:", err);
-        setAuthError("Unexpected error occurred. Please try again.");
+        if (isMounted) setAuthError("Unexpected error occurred. Please try again.");
+      } finally {
+        if (isMounted) setIsAuthChecking(false);
       }
     };
 
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [navigate, toast, refetchCart]);
 
   // Show error state
@@ -77,7 +88,7 @@ const Cart = () => {
   }
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || isAuthChecking) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
