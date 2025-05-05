@@ -42,7 +42,6 @@ const Cart = () => {
         }
         
         // Fetch cart items if user is authenticated
-        console.log("User authenticated, fetching cart");
         if (isMounted) {
           await refetchCart();
         }

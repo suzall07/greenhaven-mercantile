@@ -18,6 +18,7 @@ export const CartButton = () => {
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(0);
+  const [isRefetching, setIsRefetching] = useState(false);
   
   // Update displayed count with animation
   useEffect(() => {
@@ -36,13 +37,34 @@ export const CartButton = () => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
 
+  // Safely refetch cart data
+  const safeRefetchCart = async () => {
+    if (isRefetching) return;
+    
+    try {
+      setIsRefetching(true);
+      await refetchCart();
+    } finally {
+      setIsRefetching(false);
+    }
+  };
+
   // Handle drawer open to refresh cart data once
   const handleDrawerOpen = (open: boolean) => {
-    if (open) {
+    if (open && !isRefetching) {
       // Only refetch if opening the drawer
-      refetchCart();
+      safeRefetchCart();
     }
     setIsCartOpen(open);
+  };
+
+  // Remove item with error handling
+  const handleRemoveItem = async (itemId: number) => {
+    try {
+      await removeItem(itemId);
+    } catch (error) {
+      console.error("Error removing item:", error);
+    }
   };
 
   return (
@@ -63,7 +85,7 @@ export const CartButton = () => {
         </DrawerHeader>
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {isLoading ? (
+          {isLoading || isRefetching ? (
             <div className="animate-pulse space-y-4">
               <div className="h-16 bg-gray-200 rounded"></div>
               <div className="h-16 bg-gray-200 rounded"></div>
@@ -92,7 +114,7 @@ export const CartButton = () => {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-red-500"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => handleRemoveItem(item.id)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

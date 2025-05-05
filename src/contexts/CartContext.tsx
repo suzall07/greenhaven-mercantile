@@ -35,7 +35,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     isInitialized 
   } = useCartActions(userId);
 
-  // Fix: Use a separate effect just for auth check to prevent infinite loops
+  // Initial auth check without setting up listener
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -49,9 +49,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
   
-  // Fix: Separate listener effect to prevent loops
+  // Set up auth listener in a separate effect
   useEffect(() => {
-    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUserId(session?.user?.id || null);
     });
@@ -61,7 +60,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Fix: Wrap the addCartItem function to match the expected return type
+  // Wrap the addCartItem function to match the expected return type
   const addToCart = async (productId: number, quantity: number) => {
     await addCartItem(productId, quantity);
   };
