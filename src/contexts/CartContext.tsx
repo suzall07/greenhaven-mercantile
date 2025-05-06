@@ -65,14 +65,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Simplified addToCart function that doesn't require login
+  // Modified addToCart function with void return type to match the interface
   const addToCart = async (productId: number, quantity: number) => {
     try {
       await addCartItem(productId, quantity);
-      return true;
     } catch (error) {
       console.error("Error adding to cart:", error);
-      return false;
     }
   };
 
