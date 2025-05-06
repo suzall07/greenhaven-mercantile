@@ -21,36 +21,32 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
   
   const { 
     cartItems, 
-    isLoading: cartLoading, 
+    isLoading, 
     error, 
     refetchCart, 
     addToCart: addCartItem, 
     updateQuantity, 
     removeItem, 
     clearCart,
-    isInitialized 
   } = useCartActions(userId);
 
-  // Initial auth check without setting up listener
+  // Initial auth check
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getUser();
         setUserId(data?.user?.id || null);
-      } finally {
-        setAuthChecked(true);
+      } catch (error) {
+        console.error("Error checking auth:", error);
       }
     };
 
     checkAuth();
-  }, []);
-  
-  // Set up auth listener in a separate effect
-  useEffect(() => {
+
+    // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUserId(session?.user?.id || null);
     });
@@ -60,15 +56,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Wrap the addCartItem function to match the expected return type
+  // Simplified addToCart function that doesn't require login
   const addToCart = async (productId: number, quantity: number) => {
-    await addCartItem(productId, quantity);
+    if (!userId) {
+      // If not logged in, redirect to simple login
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        window.location.href = '/login';
+        return;
+      }
+      setUserId(data.user.id);
+    }
+    
+    try {
+      await addCartItem(productId, quantity);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
   };
 
   return (
     <CartContext.Provider value={{
       cartItems,
-      isLoading: cartLoading || !authChecked || !isInitialized,
+      isLoading,
       error,
       refetchCart,
       addToCart,

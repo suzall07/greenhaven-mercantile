@@ -7,9 +7,7 @@ export function useCartActions(userId: string | null) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   const isFetchingRef = useRef(false);
-  const initialFetchCompletedRef = useRef(false);
 
   const fetchCartItems = useCallback(async () => {
     if (!userId) {
@@ -24,7 +22,6 @@ export function useCartActions(userId: string | null) {
 
     isFetchingRef.current = true;
     setIsLoading(true);
-    setError(null);
     
     try {
       const items = await getCartItems(userId);
@@ -40,41 +37,13 @@ export function useCartActions(userId: string | null) {
     }
   }, [userId, cartItems]);
 
-  // Initial fetch when userId changes
+  // Fetch cart when userId changes
   useEffect(() => {
-    // If we already did an initial fetch and userId is the same, don't fetch again
-    if (initialFetchCompletedRef.current && !userId) {
+    if (userId) {
+      fetchCartItems();
+    } else {
       setCartItems([]);
-      setIsInitialized(true);
-      return;
     }
-
-    // If no userId, just set empty cart
-    if (!userId) {
-      setCartItems([]);
-      setIsInitialized(true);
-      initialFetchCompletedRef.current = true;
-      return;
-    }
-
-    // Fetch cart items
-    let isMounted = true;
-    const doFetch = async () => {
-      try {
-        await fetchCartItems();
-      } finally {
-        if (isMounted) {
-          setIsInitialized(true);
-          initialFetchCompletedRef.current = true;
-        }
-      }
-    };
-
-    doFetch();
-
-    return () => {
-      isMounted = false;
-    };
   }, [userId, fetchCartItems]);
 
   const refetchCart = useCallback(async () => {
@@ -82,17 +51,9 @@ export function useCartActions(userId: string | null) {
   }, [fetchCartItems]);
 
   const addToCart = useCallback(async (productId: number, quantity: number) => {
-    if (!userId) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be signed in to add items",
-        variant: "destructive",
-      });
-      return [];
-    }
+    if (!userId) return [];
 
     setIsLoading(true);
-    setError(null);
     
     try {
       await addItemToCart(userId, productId, quantity);
@@ -117,7 +78,6 @@ export function useCartActions(userId: string | null) {
     if (quantity < 1) return;
     
     setIsLoading(true);
-    setError(null);
     
     try {
       await updateCartItemQuantity(cartItemId, quantity);
@@ -137,15 +97,10 @@ export function useCartActions(userId: string | null) {
 
   const removeItem = useCallback(async (cartItemId: number) => {
     setIsLoading(true);
-    setError(null);
     
     try {
       await removeFromCart(cartItemId);
       await fetchCartItems();
-      toast({
-        title: "Item removed",
-        description: "Item removed from cart",
-      });
     } catch (error: any) {
       console.error("Error removing item:", error);
       setError(error);
@@ -163,7 +118,6 @@ export function useCartActions(userId: string | null) {
     if (!userId || cartItems.length === 0) return;
     
     setIsLoading(true);
-    setError(null);
     
     try {
       for (const item of cartItems) {
@@ -188,6 +142,5 @@ export function useCartActions(userId: string | null) {
     updateQuantity,
     removeItem,
     clearCart,
-    isInitialized
   };
 }

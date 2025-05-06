@@ -2,7 +2,7 @@
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Drawer,
   DrawerContent,
@@ -17,16 +17,7 @@ export const CartButton = () => {
   const { cartItems, removeItem, isLoading, refetchCart } = useCart();
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [displayedCount, setDisplayedCount] = useState(0);
-  const [isRefetching, setIsRefetching] = useState(false);
   
-  // Update displayed count with animation
-  useEffect(() => {
-    if (!isLoading && cartItems && cartItems.length >= 0) {
-      setDisplayedCount(cartItems.length);
-    }
-  }, [cartItems, isLoading]);
-
   const handleViewCart = () => {
     setIsCartOpen(false);
     navigate('/cart');
@@ -37,23 +28,10 @@ export const CartButton = () => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
 
-  // Safely refetch cart data
-  const safeRefetchCart = async () => {
-    if (isRefetching) return;
-    
-    try {
-      setIsRefetching(true);
-      await refetchCart();
-    } finally {
-      setIsRefetching(false);
-    }
-  };
-
   // Handle drawer open to refresh cart data once
   const handleDrawerOpen = (open: boolean) => {
-    if (open && !isRefetching) {
-      // Only refetch if opening the drawer
-      safeRefetchCart();
+    if (open) {
+      refetchCart();
     }
     setIsCartOpen(open);
   };
@@ -72,9 +50,9 @@ export const CartButton = () => {
       <DrawerTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {!isLoading && displayedCount > 0 && (
+          {!isLoading && cartItems.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {displayedCount}
+              {cartItems.length}
             </span>
           )}
         </Button>
@@ -85,7 +63,7 @@ export const CartButton = () => {
         </DrawerHeader>
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {isLoading || isRefetching ? (
+          {isLoading ? (
             <div className="animate-pulse space-y-4">
               <div className="h-16 bg-gray-200 rounded"></div>
               <div className="h-16 bg-gray-200 rounded"></div>
