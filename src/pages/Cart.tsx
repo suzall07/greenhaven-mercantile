@@ -1,9 +1,8 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
 import { useCart } from "@/contexts/CartContext";
 import { CartItemList } from "@/components/cart/CartItemList";
 import { OrderSummary } from "@/components/cart/OrderSummary";
@@ -15,45 +14,21 @@ const Cart = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { cartItems, updateQuantity, removeItem, isLoading, error, refetchCart } = useCart();
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Check authentication once
+  // Fetch cart data when the component mounts
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkAuth = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          console.error("Auth error:", error);
-          if (isMounted) setAuthError("Authentication error. Please try logging in again.");
-          return;
-        }
-        
-        if (isMounted) {
-          setIsAuthenticated(!!user);
-          await refetchCart();
-        }
-      } catch (err) {
-        console.error("Error checking auth:", err);
-        if (isMounted) setAuthError("Unexpected error occurred. Please try again.");
-      } finally {
-        if (isMounted) setIsAuthChecking(false);
-      }
-    };
-
-    checkAuth();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [refetchCart]);
+    refetchCart().catch(error => {
+      console.error("Error fetching cart:", error);
+      toast({
+        title: "Error",
+        description: "Could not load your cart. Please try again.",
+        variant: "destructive"
+      });
+    });
+  }, [refetchCart, toast]);
 
   // Show error state
-  if (error || authError) {
+  if (error) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -63,7 +38,7 @@ const Cart = () => {
               <AlertCircle className="h-5 w-5" />
               <div>
                 <h3 className="font-medium">Error loading cart</h3>
-                <p className="text-sm">{authError || error?.message || "Please try again"}</p>
+                <p className="text-sm">{error?.message || "Please try again"}</p>
               </div>
             </div>
             <button 
@@ -79,7 +54,7 @@ const Cart = () => {
   }
 
   // Show loading state
-  if (isLoading || isAuthChecking) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -91,30 +66,6 @@ const Cart = () => {
               <div className="h-20 bg-gray-200 rounded"></div>
               <div className="h-20 bg-gray-200 rounded"></div>
               <div className="h-40 bg-gray-200 rounded mt-8"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If not authenticated, show guest cart message
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 pt-24 flex justify-center">
-          <div className="w-full max-w-3xl text-center">
-            <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-3xl font-bold mb-2">Shopping as Guest</h1>
-            <p className="text-muted-foreground mb-6">Log in to save your shopping cart</p>
-            <div className="flex justify-center gap-4">
-              <Button onClick={() => navigate("/login")}>
-                Log In
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/indoor-plants")}>
-                Continue Shopping
-              </Button>
             </div>
           </div>
         </div>
