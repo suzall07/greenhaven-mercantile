@@ -179,17 +179,22 @@ const Auth = () => {
                 </div>
               )}
               
-              <Button className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} disabled={isLoading}>
+              <Button 
+                className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} 
+                disabled={isLoading}
+                type="submit"
+              >
                 {isLoading 
                   ? "Processing..." 
                   : isLogin 
-                    ? (isAdmin ? "Admin Sign In" : "Customer Sign In") 
+                    ? (isAdmin ? "Admin Sign In" : "Sign In") 
                     : "Create Account"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <button
+                type="button"
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setPassword("");

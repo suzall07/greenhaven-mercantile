@@ -17,6 +17,7 @@ export const CartButton = () => {
   const { cartItems, removeItem, isLoading, refetchCart } = useCart();
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const handleViewCart = () => {
     setIsCartOpen(false);
@@ -29,9 +30,11 @@ export const CartButton = () => {
   }, 0);
 
   // Handle drawer open to refresh cart data once
-  const handleDrawerOpen = (open: boolean) => {
-    if (open) {
-      refetchCart();
+  const handleDrawerOpen = async (open: boolean) => {
+    if (open && !isRefreshing) {
+      setIsRefreshing(true);
+      await refetchCart();
+      setIsRefreshing(false);
     }
     setIsCartOpen(open);
   };
@@ -63,7 +66,7 @@ export const CartButton = () => {
         </DrawerHeader>
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {isLoading ? (
+          {isLoading || isRefreshing ? (
             <div className="animate-pulse space-y-4">
               <div className="h-16 bg-gray-200 rounded"></div>
               <div className="h-16 bg-gray-200 rounded"></div>

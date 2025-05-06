@@ -8,7 +8,8 @@ import { useCart } from "@/contexts/CartContext";
 import { CartItemList } from "@/components/cart/CartItemList";
 import { OrderSummary } from "@/components/cart/OrderSummary";
 import { EmptyCart } from "@/components/cart/EmptyCart";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Cart = () => {
   const { toast } = useToast();
@@ -16,6 +17,7 @@ const Cart = () => {
   const { cartItems, updateQuantity, removeItem, isLoading, error, refetchCart } = useCart();
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Check authentication once
   useEffect(() => {
@@ -31,18 +33,8 @@ const Cart = () => {
           return;
         }
         
-        if (!user) {
-          toast({
-            title: "Not logged in",
-            description: "Please sign in to view your cart",
-            variant: "destructive",
-          });
-          navigate("/login");
-          return;
-        }
-        
-        // Fetch cart items if user is authenticated
         if (isMounted) {
+          setIsAuthenticated(!!user);
           await refetchCart();
         }
       } catch (err) {
@@ -58,7 +50,7 @@ const Cart = () => {
     return () => {
       isMounted = false;
     };
-  }, [navigate, toast, refetchCart]);
+  }, [refetchCart]);
 
   // Show error state
   if (error || authError) {
@@ -99,6 +91,30 @@ const Cart = () => {
               <div className="h-20 bg-gray-200 rounded"></div>
               <div className="h-20 bg-gray-200 rounded"></div>
               <div className="h-40 bg-gray-200 rounded mt-8"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show guest cart message
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex justify-center">
+          <div className="w-full max-w-3xl text-center">
+            <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-3xl font-bold mb-2">Shopping as Guest</h1>
+            <p className="text-muted-foreground mb-6">Log in to save your shopping cart</p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => navigate("/login")}>
+                Log In
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/indoor-plants")}>
+                Continue Shopping
+              </Button>
             </div>
           </div>
         </div>

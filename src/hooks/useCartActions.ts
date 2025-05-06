@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
+import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart, supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
 export function useCartActions(userId: string | null) {
@@ -35,9 +35,9 @@ export function useCartActions(userId: string | null) {
       setIsLoading(false);
       isFetchingRef.current = false;
     }
-  }, [userId, cartItems]);
+  }, [userId]);
 
-  // Fetch cart when userId changes
+  // Fetch cart when userId changes, but skip the initial render if userId is null
   useEffect(() => {
     if (userId) {
       fetchCartItems();
@@ -51,12 +51,22 @@ export function useCartActions(userId: string | null) {
   }, [fetchCartItems]);
 
   const addToCart = useCallback(async (productId: number, quantity: number) => {
-    if (!userId) return [];
-
     setIsLoading(true);
     
     try {
-      await addItemToCart(userId, productId, quantity);
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentUserId = user?.id;
+      
+      if (!currentUserId) {
+        toast({
+          title: "Guest Mode",
+          description: "Shopping as guest. Sign in to save your cart.",
+        });
+        // In a real app, you would implement a local storage solution here
+        return [];
+      }
+
+      await addItemToCart(currentUserId, productId, quantity);
       const updatedItems = await fetchCartItems();
       toast({ title: "Added to cart" });
       return updatedItems;
@@ -72,7 +82,7 @@ export function useCartActions(userId: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [userId, fetchCartItems]);
+  }, [fetchCartItems]);
 
   const updateQuantity = useCallback(async (cartItemId: number, quantity: number) => {
     if (quantity < 1) return;

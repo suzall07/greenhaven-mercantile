@@ -21,6 +21,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   
   const { 
     cartItems, 
@@ -33,7 +34,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     clearCart,
   } = useCartActions(userId);
 
-  // Initial auth check
+  // Check auth only once on initial mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -41,6 +42,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setUserId(data?.user?.id || null);
       } catch (error) {
         console.error("Error checking auth:", error);
+      } finally {
+        setAuthChecked(true);
       }
     };
 
@@ -48,7 +51,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUserId(session?.user?.id || null);
+      const newUserId = session?.user?.id || null;
+      
+      // Only update if userId actually changed to prevent loops
+      if (newUserId !== userId) {
+        console.log("Auth state change:", event, newUserId);
+        setUserId(newUserId);
+      }
     });
 
     return () => {
@@ -58,20 +67,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Simplified addToCart function that doesn't require login
   const addToCart = async (productId: number, quantity: number) => {
-    if (!userId) {
-      // If not logged in, redirect to simple login
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        window.location.href = '/login';
-        return;
-      }
-      setUserId(data.user.id);
-    }
-    
     try {
       await addCartItem(productId, quantity);
+      return true;
     } catch (error) {
       console.error("Error adding to cart:", error);
+      return false;
     }
   };
 
