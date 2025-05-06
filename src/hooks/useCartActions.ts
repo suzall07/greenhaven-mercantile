@@ -62,7 +62,6 @@ export function useCartActions(userId: string | null) {
           title: "Guest Mode",
           description: "Shopping as guest. Sign in to save your cart.",
         });
-        // In a real app, you would implement a local storage solution here
         return [];
       }
 

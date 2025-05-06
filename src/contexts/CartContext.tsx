@@ -66,7 +66,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // Modified addToCart function with void return type to match the interface
-  const addToCart = async (productId: number, quantity: number) => {
+  const addToCart = async (productId: number, quantity: number): Promise<void> => {
     try {
       await addCartItem(productId, quantity);
     } catch (error) {
