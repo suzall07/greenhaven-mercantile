@@ -4,18 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
-import { useCart } from "@/contexts/CartContext";
-import { useState } from "react";
 
 interface ProductInfoProps {
   product: Product;
   averageRating: string;
   reviewCount: number;
-  onAddToCart?: () => void;
-  onBuyNow?: () => void;
+  onAddToCart: () => void;
+  onBuyNow: () => void;
   isLoading: boolean;
 }
 
@@ -23,56 +21,13 @@ export const ProductInfo = ({
   product,
   averageRating,
   reviewCount,
-  isLoading,
   onAddToCart,
-  onBuyNow,
+  isLoading,
 }: ProductInfoProps) => {
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const [isAdding, setIsAdding] = useState(false);
-  const [isBuying, setIsBuying] = useState(false);
-
-  const handleAddToCart = async () => {
-    if (onAddToCart) {
-      // If onAddToCart prop is provided, use that
-      onAddToCart();
-      return;
-    }
-    
-    setIsAdding(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Please sign in",
-          description: "You need to be signed in to add items to cart",
-          variant: "destructive",
-        });
-        navigate('/login');
-        return;
-      }
-
-      await addToCart(product.id, 1);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while adding to cart",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAdding(false);
-    }
-  };
 
   const handleBuyNow = async () => {
-    if (onBuyNow) {
-      // If onBuyNow prop is provided, use that
-      onBuyNow();
-      return;
-    }
-    
-    setIsBuying(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -81,7 +36,7 @@ export const ProductInfo = ({
           description: "You need to be signed in to make a purchase",
           variant: "destructive",
         });
-        navigate('/login');
+        navigate('/auth');
         return;
       }
 
@@ -98,11 +53,9 @@ export const ProductInfo = ({
     } catch (error: any) {
       toast({
         title: "Payment Error",
-        description: error.message || "Failed to initiate payment",
+        description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setIsBuying(false);
     }
   };
 
@@ -145,18 +98,18 @@ export const ProductInfo = ({
         <div className="space-x-4">
           <Button 
             size="lg" 
-            onClick={handleAddToCart}
-            disabled={isLoading || isAdding}
+            onClick={onAddToCart}
+            disabled={isLoading}
           >
-            {isAdding ? "Adding..." : "Add to Cart"}
+            Add to Cart
           </Button>
           <Button 
             size="lg" 
             variant="secondary"
             onClick={handleBuyNow}
-            disabled={isLoading || isBuying}
+            disabled={isLoading}
           >
-            {isBuying ? "Processing..." : "Buy Now with Khalti"}
+            Buy Now with Khalti
           </Button>
         </div>
       </div>

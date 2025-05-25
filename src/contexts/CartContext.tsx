@@ -1,56 +1,48 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useCartActions } from '@/hooks/useCartActions';
-import { CartContextType } from '@/types/cart';
+import { useQuery } from '@tanstack/react-query';
+import { getCartItems, CartItem, supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
-const defaultCartContext: CartContextType = {
+type CartContextType = {
+  cartItems: CartItem[];
+  isLoading: boolean;
+  error: Error | null;
+  refetchCart: () => Promise<void>;
+};
+
+const CartContext = createContext<CartContextType>({
   cartItems: [],
   isLoading: false,
   error: null,
-  refetchCart: async () => [],
-  addToCart: async () => {},
-  updateQuantity: async () => {},
-  removeItem: async () => {},
-  clearCart: async () => {},
-};
-
-const CartContext = createContext<CartContextType>(defaultCartContext);
+  refetchCart: async () => {},
+});
 
 export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  
-  const { 
-    cartItems, 
-    isLoading: cartLoading, 
-    error, 
-    refetchCart, 
-    addToCart, 
-    updateQuantity, 
-    removeItem, 
-    clearCart 
-  } = useCartActions(userId);
+  const { toast } = useToast();
 
-  // Simplified auth check
+  // Check for authenticated user
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        setUserId(data?.user?.id || null);
-      } finally {
-        setIsAuthReady(true);
-      }
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUserId(data.user?.id || null);
     };
 
-    checkAuth();
-    
-    // Set up auth listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUserId(session?.user?.id || null);
-      setIsAuthReady(true);
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user.id || null);
+      
+      // Clear cart items when user logs out
+      if (!session) {
+        setCartItems([]);
+      }
     });
 
     return () => {
@@ -58,17 +50,50 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  // Fetch cart items when userId changes
+  useEffect(() => {
+    if (userId) {
+      fetchCartItems();
+    }
+  }, [userId]);
+
+  const fetchCartItems = async () => {
+    if (!userId) {
+      setCartItems([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const items = await getCartItems(userId);
+      setCartItems(items);
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: "Error",
+        description: "Failed to load your cart items",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refetchCart = async () => {
+    await fetchCartItems();
+  };
+
   return (
-    <CartContext.Provider value={{
-      cartItems,
-      isLoading: cartLoading || !isAuthReady,
-      error,
-      refetchCart,
-      addToCart,
-      updateQuantity,
-      removeItem,
-      clearCart,
-    }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        isLoading,
+        error,
+        refetchCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

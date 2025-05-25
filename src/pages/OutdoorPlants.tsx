@@ -3,19 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { getProducts } from "@/lib/supabase";
+import { getProducts, addToCart, supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
-import { useCart } from "@/contexts/CartContext";
-import { useState } from "react";
 
 const OutdoorPlants = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { addToCart, isLoading: cartLoading } = useCart();
-  const [addingToCart, setAddingToCart] = useState<number | null>(null);
-  
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
@@ -27,17 +22,27 @@ const OutdoorPlants = () => {
 
   const handleAddToCart = async (productId: number) => {
     try {
-      setAddingToCart(productId);
-      await addToCart(productId, 1);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to add items to cart",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await addToCart(user.id, productId, 1);
+      toast({
+        title: "Added to cart",
+        description: "Item has been added to your cart",
+      });
     } catch (error: any) {
-      console.error("Error adding to cart:", error);
       toast({
         title: "Error",
-        description: error.message || "Could not add to cart",
+        description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setAddingToCart(null);
     }
   };
 
@@ -74,9 +79,8 @@ const OutdoorPlants = () => {
                     <Button 
                       className="flex-1"
                       onClick={() => handleAddToCart(product.id)}
-                      disabled={addingToCart === product.id || cartLoading}
                     >
-                      {addingToCart === product.id ? "Adding..." : "Add to Cart"}
+                      Add to Cart
                     </Button>
                     <Button
                       variant="outline"

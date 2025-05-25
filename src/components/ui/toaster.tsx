@@ -1,6 +1,4 @@
-
 import { useToast } from "@/hooks/use-toast"
-import { useEffect } from "react"
 import {
   Toast,
   ToastClose,
@@ -12,18 +10,6 @@ import {
 
 export function Toaster() {
   const { toasts } = useToast()
-  
-  useEffect(() => {
-    const handleToast = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      if (detail && typeof detail === 'object') {
-        // The toast function will be called by the custom event handler in useToast
-      }
-    };
-
-    document.addEventListener("toast", handleToast);
-    return () => document.removeEventListener("toast", handleToast);
-  }, []);
 
   return (
     <ToastProvider>
