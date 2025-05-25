@@ -78,16 +78,14 @@ export const Navigation = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             <SearchComponent />
-            <Link to="/cart">
-              <CartButton />
-            </Link>
+            <CartButton />
             {user ? (
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
             ) : (
               <Button variant="ghost" size="icon">
-                <Link to="/login">
+                <Link to="/auth">
                   <User className="h-5 w-5" />
                 </Link>
               </Button>
@@ -146,9 +144,7 @@ export const Navigation = () => {
               </Link>
               <div className="flex space-x-4 items-center">
                 <SearchComponent />
-                <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
-                  <CartButton />
-                </Link>
+                <CartButton />
                 {user ? (
                   <Button variant="ghost" size="icon" onClick={() => {
                     handleLogout();
@@ -158,7 +154,7 @@ export const Navigation = () => {
                   </Button>
                 ) : (
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/login">
+                    <Link to="/auth">
                       <User className="h-5 w-5" />
                     </Link>
                   </Button>

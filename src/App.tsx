@@ -12,8 +12,6 @@ import IndoorPlants from "@/pages/IndoorPlants";
 import OutdoorPlants from "@/pages/OutdoorPlants";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProductDetails } from "@/components/product/ProductDetails";
-import CustomerLogin from "@/pages/CustomerLogin";
-import Cart from "@/pages/Cart";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,12 +32,10 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/login" element={<CustomerLogin />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/indoor-plants" element={<IndoorPlants />} />
             <Route path="/outdoor-plants" element={<OutdoorPlants />} />
             <Route path="/product/:productId" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
