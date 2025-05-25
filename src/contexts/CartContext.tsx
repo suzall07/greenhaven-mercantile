@@ -21,43 +21,36 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   
   const { 
     cartItems, 
-    isLoading, 
+    isLoading: cartLoading, 
     error, 
     refetchCart, 
-    addToCart: addCartItem, 
+    addToCart, 
     updateQuantity, 
     removeItem, 
-    clearCart,
+    clearCart 
   } = useCartActions(userId);
 
-  // Check auth only once on initial mount
+  // Simplified auth check
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getUser();
         setUserId(data?.user?.id || null);
-      } catch (error) {
-        console.error("Error checking auth:", error);
       } finally {
-        setAuthChecked(true);
+        setIsAuthReady(true);
       }
     };
 
     checkAuth();
-
+    
     // Set up auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const newUserId = session?.user?.id || null;
-      
-      // Only update if userId actually changed to prevent loops
-      if (newUserId !== userId) {
-        console.log("Auth state change:", event, newUserId);
-        setUserId(newUserId);
-      }
+      setUserId(session?.user?.id || null);
+      setIsAuthReady(true);
     });
 
     return () => {
@@ -65,19 +58,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Modified addToCart function with void return type to match the interface
-  const addToCart = async (productId: number, quantity: number): Promise<void> => {
-    try {
-      await addCartItem(productId, quantity);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-    }
-  };
-
   return (
     <CartContext.Provider value={{
       cartItems,
-      isLoading,
+      isLoading: cartLoading || !isAuthReady,
       error,
       refetchCart,
       addToCart,

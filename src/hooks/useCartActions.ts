@@ -1,26 +1,21 @@
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart, supabase } from '@/lib/supabase';
+import { useState, useCallback, useEffect } from 'react';
+import { CartItem, getCartItems, addToCart as addItemToCart, updateCartItemQuantity, removeFromCart } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 
 export function useCartActions(userId: string | null) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const isFetchingRef = useRef(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchCartItems = useCallback(async () => {
-    if (!userId) {
-      setCartItems([]);
-      return [];
-    }
-
-    // Prevent concurrent fetches
-    if (isFetchingRef.current) {
+    // Don't fetch if already fetching or no userId
+    if (isFetching || !userId) {
       return cartItems;
     }
 
-    isFetchingRef.current = true;
+    setIsFetching(true);
     setIsLoading(true);
     
     try {
@@ -33,11 +28,11 @@ export function useCartActions(userId: string | null) {
       return [];
     } finally {
       setIsLoading(false);
-      isFetchingRef.current = false;
+      setIsFetching(false);
     }
-  }, [userId]);
+  }, [userId, cartItems, isFetching]);
 
-  // Fetch cart when userId changes, but skip the initial render if userId is null
+  // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
       fetchCartItems();
@@ -51,24 +46,21 @@ export function useCartActions(userId: string | null) {
   }, [fetchCartItems]);
 
   const addToCart = useCallback(async (productId: number, quantity: number) => {
+    if (!userId) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to add items",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const currentUserId = user?.id;
-      
-      if (!currentUserId) {
-        toast({
-          title: "Guest Mode",
-          description: "Shopping as guest. Sign in to save your cart.",
-        });
-        return [];
-      }
-
-      await addItemToCart(currentUserId, productId, quantity);
-      const updatedItems = await fetchCartItems();
+      await addItemToCart(userId, productId, quantity);
+      await fetchCartItems();
       toast({ title: "Added to cart" });
-      return updatedItems;
     } catch (error: any) {
       console.error("Error adding to cart:", error);
       setError(error);
@@ -77,15 +69,12 @@ export function useCartActions(userId: string | null) {
         description: "Could not add item to cart",
         variant: "destructive",
       });
-      return [];
     } finally {
       setIsLoading(false);
     }
-  }, [fetchCartItems]);
+  }, [userId, fetchCartItems]);
 
   const updateQuantity = useCallback(async (cartItemId: number, quantity: number) => {
-    if (quantity < 1) return;
-    
     setIsLoading(true);
     
     try {
@@ -150,6 +139,6 @@ export function useCartActions(userId: string | null) {
     addToCart,
     updateQuantity,
     removeItem,
-    clearCart,
+    clearCart
   };
 }

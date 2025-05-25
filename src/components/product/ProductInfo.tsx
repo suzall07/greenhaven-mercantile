@@ -41,6 +41,17 @@ export const ProductInfo = ({
     
     setIsAdding(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Please sign in",
+          description: "You need to be signed in to add items to cart",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
       await addToCart(product.id, 1);
     } catch (error) {
       console.error("Error adding to cart:", error);

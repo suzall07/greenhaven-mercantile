@@ -14,11 +14,10 @@ import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const CartButton = () => {
-  const { cartItems, removeItem, isLoading, refetchCart } = useCart();
+  const { cartItems, removeItem, isLoading } = useCart();
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const handleViewCart = () => {
     setIsCartOpen(false);
     navigate('/cart');
@@ -29,27 +28,8 @@ export const CartButton = () => {
     return total + ((item.product?.price || 0) * item.quantity);
   }, 0);
 
-  // Handle drawer open to refresh cart data once
-  const handleDrawerOpen = async (open: boolean) => {
-    if (open && !isRefreshing) {
-      setIsRefreshing(true);
-      await refetchCart();
-      setIsRefreshing(false);
-    }
-    setIsCartOpen(open);
-  };
-
-  // Remove item with error handling
-  const handleRemoveItem = async (itemId: number) => {
-    try {
-      await removeItem(itemId);
-    } catch (error) {
-      console.error("Error removing item:", error);
-    }
-  };
-
   return (
-    <Drawer open={isCartOpen} onOpenChange={handleDrawerOpen}>
+    <Drawer open={isCartOpen} onOpenChange={setIsCartOpen}>
       <DrawerTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
@@ -66,11 +46,9 @@ export const CartButton = () => {
         </DrawerHeader>
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
-          {isLoading || isRefreshing ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-16 bg-gray-200 rounded"></div>
-              <div className="h-16 bg-gray-200 rounded"></div>
-              <div className="h-16 bg-gray-200 rounded"></div>
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
           ) : cartItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-6">Your cart is empty</p>
@@ -95,7 +73,7 @@ export const CartButton = () => {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-red-500"
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
