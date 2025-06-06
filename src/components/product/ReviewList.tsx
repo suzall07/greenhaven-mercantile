@@ -21,6 +21,14 @@ interface ReviewListProps {
 }
 
 export const ReviewList = ({ reviews }: ReviewListProps) => {
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>No reviews yet. Be the first to review this product!</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {reviews.map((review) => (
@@ -45,8 +53,8 @@ export const ReviewList = ({ reviews }: ReviewListProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            <p>{review.comment}</p>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mb-2">{review.comment}</p>
+            <p className="text-sm text-muted-foreground">
               {review.profiles?.email || 'Anonymous'}
             </p>
           </CardContent>

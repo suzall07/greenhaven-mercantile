@@ -2,7 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
-import { getProducts, addToCart, supabase } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase";
+import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
@@ -35,8 +36,10 @@ const heroSlides = [
 
 const Index = () => {
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const [carouselApi, setCarouselApi] = useState<any>(null);
-  const { data: products, isLoading } = useQuery({
+  
+  const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
   });
@@ -58,27 +61,9 @@ const Index = () => {
 
   const handleAddToCart = async (productId: number) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Please sign in",
-          description: "You need to be signed in to add items to cart",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await addToCart(user.id, productId, 1);
-      toast({
-        title: "Added to cart",
-        description: "Item has been added to your cart",
-      });
+      await addToCart(productId, 1);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Error handling is done in the cart context
     }
   };
 
@@ -88,6 +73,19 @@ const Index = () => {
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
           <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-center text-red-500">
+            Error loading products. Please try again later.
+          </div>
         </div>
       </div>
     );
@@ -136,7 +134,7 @@ const Index = () => {
               Featured Products
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {products?.slice(0, 3).map((product, index) => (
+              {products.slice(0, 3).map((product, index) => (
                 <Link
                   key={product.id}
                   to={`/product/${product.id}`}
