@@ -51,8 +51,8 @@ export const Navigation = () => {
     
     try {
       const { data, error } = await supabase.rpc('is_admin', { user_email: email });
-      if (!error) {
-        setIsAdmin(data);
+      if (!error && data) {
+        setIsAdmin(true);
       } else {
         setIsAdmin(false);
       }

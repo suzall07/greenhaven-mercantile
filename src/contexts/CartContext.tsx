@@ -40,11 +40,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user.id || null);
+      const newUserId = session?.user.id || null;
+      setUserId(newUserId);
       
       // Clear cart items when user logs out
       if (!session) {
         setCartItems([]);
+      } else {
+        // Fetch cart items immediately when user logs in
+        fetchCartItemsForUser(newUserId);
       }
     });
 
@@ -56,12 +60,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Fetch cart items when userId changes
   useEffect(() => {
     if (userId) {
-      fetchCartItems();
+      fetchCartItemsForUser(userId);
     }
   }, [userId]);
 
-  const fetchCartItems = async () => {
-    if (!userId) {
+  const fetchCartItemsForUser = async (userIdToFetch: string | null) => {
+    if (!userIdToFetch) {
       setCartItems([]);
       return;
     }
@@ -70,9 +74,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const items = await getCartItems(userId);
+      const items = await getCartItems(userIdToFetch);
+      console.log('Fetched cart items:', items);
       setCartItems(items);
     } catch (err: any) {
+      console.error('Error fetching cart items:', err);
       setError(err);
       toast({
         title: "Error",
@@ -82,6 +88,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchCartItems = async () => {
+    await fetchCartItemsForUser(userId);
   };
 
   const handleAddToCart = async (productId: number, quantity: number = 1) => {
@@ -96,14 +106,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      console.log('Adding to cart:', { productId, quantity, userId: user.id });
       await addToCart(user.id, productId, quantity);
-      // Force immediate refetch after adding to cart
-      await fetchCartItems();
+      
+      // Immediately fetch updated cart items
+      await fetchCartItemsForUser(user.id);
+      
       toast({
         title: "Added to cart",
         description: "Item has been added to your cart",
       });
     } catch (error: any) {
+      console.error('Error adding to cart:', error);
       toast({
         title: "Error",
         description: error.message,
