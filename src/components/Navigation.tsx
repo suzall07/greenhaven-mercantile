@@ -17,6 +17,7 @@ import {
 export const Navigation = () => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -27,6 +28,8 @@ export const Navigation = () => {
       setUser(user);
       if (user) {
         checkAdminStatus(user.email);
+      } else {
+        setAdminCheckComplete(true);
       }
     });
 
@@ -37,6 +40,7 @@ export const Navigation = () => {
         checkAdminStatus(session.user.email);
       } else {
         setIsAdmin(false);
+        setAdminCheckComplete(true);
       }
     });
 
@@ -46,6 +50,7 @@ export const Navigation = () => {
   const checkAdminStatus = async (email: string | undefined) => {
     if (!email) {
       setIsAdmin(false);
+      setAdminCheckComplete(true);
       return;
     }
     
@@ -59,6 +64,8 @@ export const Navigation = () => {
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
+    } finally {
+      setAdminCheckComplete(true);
     }
   };
 
@@ -158,7 +165,7 @@ export const Navigation = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {isAdmin && (
+                  {adminCheckComplete && isAdmin && (
                     <DropdownMenuItem onClick={handleNavigation('/admin')}>
                       Admin Panel
                     </DropdownMenuItem>
