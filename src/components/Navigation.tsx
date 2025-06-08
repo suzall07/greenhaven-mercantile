@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { CartButton } from "@/components/cart/CartButton";
+import { SearchComponent } from "@/components/search/SearchComponent";
 import { User } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,15 +44,21 @@ export const Navigation = () => {
   }, []);
 
   const checkAdminStatus = async (email: string | undefined) => {
-    if (!email) return;
+    if (!email) {
+      setIsAdmin(false);
+      return;
+    }
     
     try {
       const { data, error } = await supabase.rpc('is_admin', { user_email: email });
       if (!error) {
         setIsAdmin(data);
+      } else {
+        setIsAdmin(false);
       }
     } catch (error) {
       console.error('Error checking admin status:', error);
+      setIsAdmin(false);
     }
   };
 
@@ -140,6 +147,7 @@ export const Navigation = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {user && <SearchComponent />}
             {user && <CartButton />}
             
             {user ? (
