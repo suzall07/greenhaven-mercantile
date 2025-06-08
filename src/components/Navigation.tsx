@@ -1,43 +1,69 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { User, Menu, X, LogOut } from "lucide-react";
-import { Button } from "./ui/button";
-import { SearchComponent } from "./search/SearchComponent";
-import { CartButton } from "./cart/CartButton";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { CartButton } from "@/components/cart/CartButton";
+import { User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Check for user authentication
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        checkAdminStatus(user.email);
+      }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.email);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
+  const checkAdminStatus = async (email: string | undefined) => {
+    if (!email) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('is_admin', { user_email: email });
+      if (!error) {
+        setIsAdmin(data);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
+
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
       await supabase.auth.signOut();
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out",
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
       });
       navigate('/');
     } catch (error: any) {
@@ -49,120 +75,98 @@ export const Navigation = () => {
     }
   };
 
-  return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="text-xl font-semibold">
-            Plant&deco
-          </Link>
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(path);
+  };
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="nav-link">
-              Home
-            </Link>
-            <Link to="/indoor-plants" className="nav-link">
-              Indoor Plants
-            </Link>
-            <Link to="/outdoor-plants" className="nav-link">
-              Outdoor Plants
-            </Link>
-            <Link to="/about" className="nav-link">
-              About
-            </Link>
-            <Link to="/contact" className="nav-link">
-              Contact
-            </Link>
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <button 
+              onClick={handleNavigation('/')}
+              className="text-2xl font-bold text-primary hover:text-primary/80 transition-colors"
+            >
+              Plant&deco
+            </button>
+            
+            <div className="hidden md:flex space-x-6">
+              <button
+                onClick={handleNavigation('/')}
+                className={`transition-colors ${
+                  isActive('/') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                Home
+              </button>
+              <button
+                onClick={handleNavigation('/indoor-plants')}
+                className={`transition-colors ${
+                  isActive('/indoor-plants') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                Indoor Plants
+              </button>
+              <button
+                onClick={handleNavigation('/outdoor-plants')}
+                className={`transition-colors ${
+                  isActive('/outdoor-plants') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                Outdoor Plants
+              </button>
+              <button
+                onClick={handleNavigation('/about')}
+                className={`transition-colors ${
+                  isActive('/about') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                About
+              </button>
+              <button
+                onClick={handleNavigation('/contact')}
+                className={`transition-colors ${
+                  isActive('/contact') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                Contact
+              </button>
+            </div>
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
-            <SearchComponent />
-            <CartButton />
+          <div className="flex items-center space-x-4">
+            {user && <CartButton />}
+            
             {user ? (
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={handleNavigation('/admin')}>
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="icon">
-                <Link to="/auth">
-                  <User className="h-5 w-5" />
-                </Link>
+              <Button onClick={handleNavigation('/auth')} variant="outline">
+                Sign In
               </Button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden glass-panel absolute top-16 left-0 right-0 p-4 animate-fadeIn">
-            <div className="flex flex-col space-y-4">
-              <Link
-                to="/"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                to="/indoor-plants"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Indoor Plants
-              </Link>
-              <Link
-                to="/outdoor-plants"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Outdoor Plants
-              </Link>
-              <Link
-                to="/about"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <div className="flex space-x-4 items-center">
-                <SearchComponent />
-                <CartButton />
-                {user ? (
-                  <Button variant="ghost" size="icon" onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}>
-                    <LogOut className="h-5 w-5" />
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/auth">
-                      <User className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );

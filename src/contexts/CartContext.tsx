@@ -97,6 +97,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
 
       await addToCart(user.id, productId, quantity);
+      // Force immediate refetch after adding to cart
       await fetchCartItems();
       toast({
         title: "Added to cart",
