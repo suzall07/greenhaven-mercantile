@@ -30,25 +30,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Check for authenticated user
+  // Check for authenticated user and set up auth listener
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
-      setUserId(data.user?.id || null);
+      const newUserId = data.user?.id || null;
+      setUserId(newUserId);
+      
+      if (newUserId) {
+        await fetchCartItemsForUser(newUserId);
+      } else {
+        setCartItems([]);
+      }
     };
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const newUserId = session?.user.id || null;
       setUserId(newUserId);
       
-      // Clear cart items when user logs out
-      if (!session) {
+      if (event === 'SIGNED_OUT' || !session) {
         setCartItems([]);
-      } else {
-        // Fetch cart items immediately when user logs in
-        fetchCartItemsForUser(newUserId);
+      } else if (newUserId && event === 'SIGNED_IN') {
+        await fetchCartItemsForUser(newUserId);
       }
     });
 
@@ -57,14 +62,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Fetch cart items when userId changes
-  useEffect(() => {
-    if (userId) {
-      fetchCartItemsForUser(userId);
-    }
-  }, [userId]);
-
-  const fetchCartItemsForUser = async (userIdToFetch: string | null) => {
+  const fetchCartItemsForUser = async (userIdToFetch: string) => {
     if (!userIdToFetch) {
       setCartItems([]);
       return;
@@ -76,7 +74,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       const items = await getCartItems(userIdToFetch);
       console.log('Fetched cart items:', items);
-      setCartItems(items);
+      setCartItems(items || []);
     } catch (err: any) {
       console.error('Error fetching cart items:', err);
       setError(err);
@@ -90,8 +88,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const fetchCartItems = async () => {
-    await fetchCartItemsForUser(userId);
+  const refetchCart = async () => {
+    if (userId) {
+      await fetchCartItemsForUser(userId);
+    }
   };
 
   const handleAddToCart = async (productId: number, quantity: number = 1) => {
@@ -124,10 +124,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         variant: "destructive",
       });
     }
-  };
-
-  const refetchCart = async () => {
-    await fetchCartItems();
   };
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);

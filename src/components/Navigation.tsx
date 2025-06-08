@@ -95,6 +95,22 @@ export const Navigation = () => {
     navigate(path);
   };
 
+  const handleAdminNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Double check admin status before navigation
+    if (adminCheckComplete && isAdmin) {
+      navigate('/admin');
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "You don't have admin privileges",
+        variant: "destructive",
+      });
+    }
+  };
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -166,7 +182,7 @@ export const Navigation = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {adminCheckComplete && isAdmin && (
-                    <DropdownMenuItem onClick={handleNavigation('/admin')}>
+                    <DropdownMenuItem onClick={handleAdminNavigation}>
                       Admin Panel
                     </DropdownMenuItem>
                   )}
