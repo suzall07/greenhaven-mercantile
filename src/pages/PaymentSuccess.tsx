@@ -27,6 +27,16 @@ const PaymentSuccess = () => {
     return () => clearTimeout(timer);
   }, [searchParams]);
 
+  const handleBackToStore = () => {
+    // Navigate directly to the outdoor plants page since user was there
+    navigate('/outdoor-plants');
+  };
+
+  const handleViewHistory = () => {
+    // Force refresh the payment history by adding a timestamp
+    navigate('/payment-history?refresh=' + Date.now());
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -88,16 +98,16 @@ const PaymentSuccess = () => {
               
               <div className="space-y-3">
                 <Button 
-                  onClick={() => navigate('/')} 
+                  onClick={handleBackToStore} 
                   className="w-full"
                   size="lg"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Continue Shopping
+                  Back to Store
                 </Button>
                 
                 <Button 
-                  onClick={() => navigate('/payment-history')} 
+                  onClick={handleViewHistory} 
                   variant="outline" 
                   className="w-full"
                   size="lg"

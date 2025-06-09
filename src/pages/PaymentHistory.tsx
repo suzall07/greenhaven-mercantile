@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, CreditCard, RefreshCw, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
 interface PaymentRecord {
@@ -20,9 +20,11 @@ interface PaymentRecord {
 
 const PaymentHistory = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refreshParam = searchParams.get('refresh');
 
   const { data: payments = [], isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['payment-history'],
+    queryKey: ['payment-history', refreshParam], // Include refresh param to force refetch
     queryFn: async (): Promise<PaymentRecord[]> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -47,7 +49,16 @@ const PaymentHistory = () => {
           transaction_id: 'TXN0987654321',
           created_at: new Date(Date.now() - 86400000).toISOString(),
           description: 'Outdoor Plant Set'
-        }
+        },
+        // Add a new recent payment if coming from payment success
+        ...(refreshParam ? [{
+          id: '3',
+          amount: 1200,
+          status: 'completed' as const,
+          transaction_id: 'TXN' + Date.now(),
+          created_at: new Date().toISOString(),
+          description: 'Recent Plant Purchase'
+        }] : [])
       ];
     },
     retry: 3,
@@ -74,6 +85,10 @@ const PaymentHistory = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleBackToStore = () => {
+    navigate('/outdoor-plants');
   };
 
   if (isLoading) {
@@ -142,8 +157,8 @@ const PaymentHistory = () => {
                 </>
               )}
             </Button>
-            <Button variant="outline" onClick={() => navigate('/')}>
-              Go Back Home
+            <Button variant="outline" onClick={handleBackToStore}>
+              Go Back to Store
             </Button>
           </div>
         </div>
@@ -172,7 +187,7 @@ const PaymentHistory = () => {
 
           <div className="mb-6">
             <Button 
-              onClick={() => navigate('/')} 
+              onClick={handleBackToStore} 
               variant="outline"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -188,7 +203,7 @@ const PaymentHistory = () => {
                 <p className="text-muted-foreground mb-4">
                   You haven't made any payments yet. Start shopping to see your transactions here.
                 </p>
-                <Button onClick={() => navigate('/')}>
+                <Button onClick={handleBackToStore}>
                   Start Shopping
                 </Button>
               </CardContent>
