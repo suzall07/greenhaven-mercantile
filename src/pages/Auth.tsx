@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, signUpWithEmail, supabase } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,10 +23,17 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return; // Prevent double submission
+    
     setIsLoading(true);
 
     try {
       if (isLogin) {
+        if (!email || !password) {
+          throw new Error("Please fill in all fields");
+        }
+
         const { data, error } = await signInWithEmail(email, password);
         if (error) throw error;
 
@@ -49,19 +57,23 @@ const Auth = () => {
           });
         }
       } else {
+        // Validation for signup
+        if (!email || !password || !confirmPassword) {
+          throw new Error("Please fill in all fields");
+        }
+
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters long");
+        }
+
         // Check if passwords match for signup
         if (password !== confirmPassword) {
-          toast({
-            title: "Error",
-            description: "Passwords do not match",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+          throw new Error("Passwords do not match");
         }
 
         const { error } = await signUpWithEmail(email, password);
         if (error) throw error;
+        
         toast({
           title: "Welcome to Plant&deco!",
           description: "Your account has been created successfully.",
@@ -69,9 +81,10 @@ const Auth = () => {
         navigate("/");
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -81,9 +94,18 @@ const Auth = () => {
 
   // Toggle between admin and customer login mode when in login state
   const handleModeToggle = (checked: boolean) => {
+    if (isLoading) return; // Prevent mode switch during loading
     setIsAdmin(checked);
     // Clear the form when switching modes
     setPassword("");
+  };
+
+  const handleToggleAuthMode = () => {
+    if (isLoading) return; // Prevent mode switch during loading
+    setIsLogin(!isLogin);
+    setPassword("");
+    setConfirmPassword("");
+    if (!isLogin) setIsAdmin(false); // Reset to customer mode when switching to login
   };
 
   return (
@@ -110,6 +132,7 @@ const Auth = () => {
                 <Switch 
                   checked={isAdmin} 
                   onCheckedChange={handleModeToggle} 
+                  disabled={isLoading}
                   className="data-[state=checked]:bg-amber-600"
                 />
                 <span className={`text-sm ${isAdmin ? "font-semibold" : ""}`}>Admin</span>
@@ -128,6 +151,7 @@ const Auth = () => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="John Doe"
                     className="h-11"
+                    disabled={isLoading}
                   />
                 </div>
               )}
@@ -144,6 +168,7 @@ const Auth = () => {
                   placeholder="your@email.com"
                   required
                   className="h-11"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -159,6 +184,7 @@ const Auth = () => {
                   placeholder="••••••••"
                   required
                   className="h-11"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -175,28 +201,34 @@ const Auth = () => {
                     placeholder="••••••••"
                     required
                     className="h-11"
+                    disabled={isLoading}
                   />
                 </div>
               )}
               
-              <Button className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} disabled={isLoading}>
-                {isLoading 
-                  ? "Processing..." 
-                  : isLogin 
+              <Button 
+                type="submit"
+                className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isLogin ? "Signing in..." : "Creating account..."}
+                  </>
+                ) : (
+                  isLogin 
                     ? (isAdmin ? "Admin Sign In" : "Customer Sign In") 
-                    : "Create Account"}
+                    : "Create Account"
+                )}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <button
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setPassword("");
-                  setConfirmPassword("");
-                  if (!isLogin) setIsAdmin(false); // Reset to customer mode when switching to login
-                }}
-                className="text-sm text-primary hover:underline"
+                onClick={handleToggleAuthMode}
+                disabled={isLoading}
+                className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLogin
                   ? "New to Plant&deco? Create an account"
