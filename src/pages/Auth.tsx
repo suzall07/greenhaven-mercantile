@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signUpWithEmail, supabase } from "@/lib/supabase";
+import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 
@@ -21,10 +21,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Simple admin check - faster than RPC call
+  const isAdminEmail = (email: string) => {
+    return email === 'sujalkhadgi13@gmail.com';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isLoading) return; // Prevent double submission
+    if (isLoading) return;
     
     setIsLoading(true);
 
@@ -34,20 +39,26 @@ const Auth = () => {
           throw new Error("Please fill in all fields");
         }
 
-        const { data, error } = await signInWithEmail(email, password);
+        // Add timeout to prevent hanging requests
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Login timeout. Please try again.")), 15000);
+        });
+
+        const signInPromise = signInWithEmail(email, password);
+        const { data, error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+        
         if (error) throw error;
 
-        // Redirect based on login mode
+        // Quick admin check without RPC
         if (isAdmin) {
-          // Check if user is admin
-          if (email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98') {
+          if (isAdminEmail(email) && password === 'Sujal@98') {
             navigate("/admin");
             toast({
               title: "Welcome back, admin!",
               description: "You have successfully signed in.",
             });
           } else {
-            throw new Error("You don't have admin privileges");
+            throw new Error("Invalid admin credentials");
           }
         } else {
           navigate("/");
@@ -57,7 +68,7 @@ const Auth = () => {
           });
         }
       } else {
-        // Validation for signup
+        // Signup validation
         if (!email || !password || !confirmPassword) {
           throw new Error("Please fill in all fields");
         }
@@ -66,12 +77,17 @@ const Auth = () => {
           throw new Error("Password must be at least 6 characters long");
         }
 
-        // Check if passwords match for signup
         if (password !== confirmPassword) {
           throw new Error("Passwords do not match");
         }
 
-        const { error } = await signUpWithEmail(email, password);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Signup timeout. Please try again.")), 15000);
+        });
+
+        const signUpPromise = signUpWithEmail(email, password);
+        const { error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+        
         if (error) throw error;
         
         toast({
@@ -82,9 +98,23 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.error('Auth error:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = error.message || "An unexpected error occurred";
+      
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials.";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Please check your email and confirm your account before signing in.";
+      } else if (error.message?.includes("timeout")) {
+        errorMessage = "Connection timeout. Please check your internet and try again.";
+      } else if (error.message?.includes("network")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred",
+        title: "Authentication Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -92,20 +122,18 @@ const Auth = () => {
     }
   };
 
-  // Toggle between admin and customer login mode when in login state
   const handleModeToggle = (checked: boolean) => {
-    if (isLoading) return; // Prevent mode switch during loading
+    if (isLoading) return;
     setIsAdmin(checked);
-    // Clear the form when switching modes
     setPassword("");
   };
 
   const handleToggleAuthMode = () => {
-    if (isLoading) return; // Prevent mode switch during loading
+    if (isLoading) return;
     setIsLogin(!isLogin);
     setPassword("");
     setConfirmPassword("");
-    if (!isLogin) setIsAdmin(false); // Reset to customer mode when switching to login
+    if (!isLogin) setIsAdmin(false);
   };
 
   return (
@@ -169,6 +197,7 @@ const Auth = () => {
                   required
                   className="h-11"
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
               
@@ -185,6 +214,7 @@ const Auth = () => {
                   required
                   className="h-11"
                   disabled={isLoading}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                 />
               </div>
 
@@ -202,6 +232,7 @@ const Auth = () => {
                     required
                     className="h-11"
                     disabled={isLoading}
+                    autoComplete="new-password"
                   />
                 </div>
               )}
