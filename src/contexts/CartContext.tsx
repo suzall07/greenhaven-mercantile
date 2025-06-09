@@ -25,18 +25,25 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Check for authenticated user and set up auth listener
   useEffect(() => {
+    let mounted = true;
+    
     const checkUser = async () => {
+      if (!mounted) return;
+      
       setIsLoading(true);
       try {
         const { data } = await supabase.auth.getUser();
         const newUserId = data.user?.id || null;
+        
+        if (!mounted) return;
+        
         setUserId(newUserId);
         
         if (newUserId) {
@@ -46,7 +53,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           setIsLoading(false);
         }
       } catch (err) {
+        if (!mounted) return;
         console.error('Error checking user:', err);
+        setError(err as Error);
         setIsLoading(false);
       }
     };
@@ -54,18 +63,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       const newUserId = session?.user.id || null;
       setUserId(newUserId);
       
       if (event === 'SIGNED_OUT' || !session) {
         setCartItems([]);
         setIsLoading(false);
+        setError(null);
       } else if (newUserId && event === 'SIGNED_IN') {
         await fetchCartItemsForUser(newUserId);
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -129,7 +142,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error adding to cart:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to add item to cart",
         variant: "destructive",
       });
     }

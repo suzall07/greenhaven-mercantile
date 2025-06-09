@@ -13,10 +13,12 @@ import { updateCartItemQuantity, removeFromCart, supabase } from "@/lib/supabase
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
+import { useState } from "react";
 
 export const CartButton = () => {
   const { cartItems, refetchCart, totalItems } = useCart();
   const { toast } = useToast();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
     try {
@@ -29,7 +31,7 @@ export const CartButton = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to update quantity",
         variant: "destructive",
       });
     }
@@ -46,13 +48,17 @@ export const CartButton = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to remove item",
         variant: "destructive",
       });
     }
   };
 
   const handleCheckout = async () => {
+    if (isCheckingOut) return;
+    
+    setIsCheckingOut(true);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -68,6 +74,15 @@ export const CartButton = () => {
         return total + (item.product.price * item.quantity);
       }, 0);
 
+      if (cartTotal === 0) {
+        toast({
+          title: "Empty cart",
+          description: "Your cart is empty",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const orderId = `order-${Date.now()}`;
       await initiateKhaltiPayment({
         amount: cartTotal,
@@ -79,11 +94,14 @@ export const CartButton = () => {
         },
       });
     } catch (error: any) {
+      console.error('Payment error:', error);
       toast({
         title: "Payment Error",
-        description: error.message,
+        description: error.message || "Failed to initiate payment",
         variant: "destructive",
       });
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -162,8 +180,9 @@ export const CartButton = () => {
                 <Button 
                   className="w-full mt-4"
                   onClick={handleCheckout}
+                  disabled={isCheckingOut}
                 >
-                  Checkout with Khalti
+                  {isCheckingOut ? "Processing..." : "Checkout with Khalti"}
                 </Button>
               </div>
             </>

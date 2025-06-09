@@ -13,11 +13,9 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 
 const PaymentHistory = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const { data: payments, isLoading, error } = useQuery({
     queryKey: ['payment-history'],
@@ -39,14 +37,36 @@ const PaymentHistory = () => {
         }
       ];
     },
+    retry: 1,
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex-grow">
+          <div className="text-center py-8">
+            <p>Loading payment history...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to load payment history",
-      variant: "destructive",
-    });
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex-grow">
+          <div className="text-center py-8">
+            <p className="text-red-500">Failed to load payment history</p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -65,11 +85,7 @@ const PaymentHistory = () => {
           <h1 className="text-3xl font-bold">Payment History</h1>
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-8">
-            <p>Loading payment history...</p>
-          </div>
-        ) : payments && payments.length > 0 ? (
+        {payments && payments.length > 0 ? (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
