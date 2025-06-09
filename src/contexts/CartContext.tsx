@@ -25,7 +25,7 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [error, setError] = useState<Error | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -33,14 +33,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Check for authenticated user and set up auth listener
   useEffect(() => {
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const newUserId = data.user?.id || null;
-      setUserId(newUserId);
-      
-      if (newUserId) {
-        await fetchCartItemsForUser(newUserId);
-      } else {
-        setCartItems([]);
+      setIsLoading(true);
+      try {
+        const { data } = await supabase.auth.getUser();
+        const newUserId = data.user?.id || null;
+        setUserId(newUserId);
+        
+        if (newUserId) {
+          await fetchCartItemsForUser(newUserId);
+        } else {
+          setCartItems([]);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Error checking user:', err);
+        setIsLoading(false);
       }
     };
 
@@ -52,6 +59,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       
       if (event === 'SIGNED_OUT' || !session) {
         setCartItems([]);
+        setIsLoading(false);
       } else if (newUserId && event === 'SIGNED_IN') {
         await fetchCartItemsForUser(newUserId);
       }
@@ -65,6 +73,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const fetchCartItemsForUser = async (userIdToFetch: string) => {
     if (!userIdToFetch) {
       setCartItems([]);
+      setIsLoading(false);
       return;
     }
 
