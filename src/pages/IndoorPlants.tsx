@@ -16,8 +16,10 @@ const IndoorPlants = () => {
   const { data: products = [], isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+    retryDelay: 1000,
   });
 
   const indoorPlants = products?.filter(product => 
