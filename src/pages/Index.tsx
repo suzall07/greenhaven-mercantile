@@ -15,6 +15,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const heroSlides = [
   {
@@ -34,6 +35,17 @@ const heroSlides = [
   }
 ];
 
+const ProductSkeleton = () => (
+  <div className="product-card">
+    <Skeleton className="w-full h-64 rounded-md mb-4" />
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-20" />
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="h-5 w-16" />
+    </div>
+  </div>
+);
+
 const Index = () => {
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -42,17 +54,17 @@ const Index = () => {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Set up auto-sliding for carousel
   useEffect(() => {
     if (carouselApi) {
-      // Auto advance slide every 5 seconds
       const autoplayInterval = setInterval(() => {
         carouselApi.scrollNext();
       }, 5000);
 
-      // Clear interval on component unmount
       return () => {
         clearInterval(autoplayInterval);
       };
@@ -66,17 +78,6 @@ const Index = () => {
       // Error handling is done in the cart context
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 pt-24">
-          <div className="text-center">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -134,29 +135,36 @@ const Index = () => {
               Featured Products
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {products.slice(0, 3).map((product, index) => (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.id}`}
-                  className="product-card hover:shadow-md transition-shadow"
-                  style={{ animationDelay: `${0.2 * index}s` }}
-                >
-                  <div className="mb-4">
-                    <LazyImage
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-64 object-cover rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <span className="text-sm text-muted-foreground">
-                      {product.category}
-                    </span>
-                    <h3 className="text-lg font-semibold">{product.name}</h3>
-                    <p className="text-primary font-medium">Rs {product.price}</p>
-                  </div>
-                </Link>
-              ))}
+              {isLoading ? (
+                // Show skeleton loaders while loading
+                Array.from({ length: 3 }).map((_, index) => (
+                  <ProductSkeleton key={index} />
+                ))
+              ) : (
+                products.slice(0, 3).map((product, index) => (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className="product-card hover:shadow-md transition-shadow"
+                    style={{ animationDelay: `${0.2 * index}s` }}
+                  >
+                    <div className="mb-4">
+                      <LazyImage
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-64 object-cover rounded-md"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-sm text-muted-foreground">
+                        {product.category}
+                      </span>
+                      <h3 className="text-lg font-semibold">{product.name}</h3>
+                      <p className="text-primary font-medium">Rs {product.price}</p>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
             <div className="text-center mt-8">
               <Link to="/indoor-plants">
