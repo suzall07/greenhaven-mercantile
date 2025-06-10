@@ -21,9 +21,9 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Simple admin check - faster than RPC call
-  const isAdminEmail = (email: string) => {
-    return email === 'sujalkhadgi13@gmail.com';
+  // Fast admin check - no database calls needed
+  const isAdminCredentials = (email: string, password: string) => {
+    return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,27 +39,22 @@ const Auth = () => {
           throw new Error("Please fill in all fields");
         }
 
-        // Add timeout to prevent hanging requests
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Login timeout. Please try again.")), 15000);
-        });
+        // For admin login, verify credentials first
+        if (isAdmin && !isAdminCredentials(email, password)) {
+          throw new Error("Invalid admin credentials");
+        }
 
-        const signInPromise = signInWithEmail(email, password);
-        const { data, error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+        const { data, error } = await signInWithEmail(email, password);
         
         if (error) throw error;
 
-        // Quick admin check without RPC
+        // Fast navigation without additional database calls
         if (isAdmin) {
-          if (isAdminEmail(email) && password === 'Sujal@98') {
-            navigate("/admin");
-            toast({
-              title: "Welcome back, admin!",
-              description: "You have successfully signed in.",
-            });
-          } else {
-            throw new Error("Invalid admin credentials");
-          }
+          navigate("/admin");
+          toast({
+            title: "Welcome back, admin!",
+            description: "You have successfully signed in.",
+          });
         } else {
           navigate("/");
           toast({
@@ -81,12 +76,7 @@ const Auth = () => {
           throw new Error("Passwords do not match");
         }
 
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Signup timeout. Please try again.")), 15000);
-        });
-
-        const signUpPromise = signUpWithEmail(email, password);
-        const { error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+        const { error } = await signUpWithEmail(email, password);
         
         if (error) throw error;
         
@@ -106,10 +96,8 @@ const Auth = () => {
         errorMessage = "Invalid email or password. Please check your credentials.";
       } else if (error.message?.includes("Email not confirmed")) {
         errorMessage = "Please check your email and confirm your account before signing in.";
-      } else if (error.message?.includes("timeout")) {
-        errorMessage = "Connection timeout. Please check your internet and try again.";
-      } else if (error.message?.includes("network")) {
-        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error.message?.includes("User already registered")) {
+        errorMessage = "An account with this email already exists. Please sign in instead.";
       }
       
       toast({

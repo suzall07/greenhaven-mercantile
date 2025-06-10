@@ -17,7 +17,6 @@ import {
 export const Navigation = () => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -27,9 +26,8 @@ export const Navigation = () => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       if (user) {
-        checkAdminStatus(user.email);
-      } else {
-        setAdminCheckComplete(true);
+        // Fast admin check without database calls
+        setIsAdmin(user.email === 'sujalkhadgi13@gmail.com');
       }
     });
 
@@ -37,37 +35,15 @@ export const Navigation = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdminStatus(session.user.email);
+        // Fast admin check without database calls
+        setIsAdmin(session.user.email === 'sujalkhadgi13@gmail.com');
       } else {
         setIsAdmin(false);
-        setAdminCheckComplete(true);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkAdminStatus = async (email: string | undefined) => {
-    if (!email) {
-      setIsAdmin(false);
-      setAdminCheckComplete(true);
-      return;
-    }
-    
-    try {
-      const { data, error } = await supabase.rpc('is_admin', { user_email: email });
-      if (!error && data) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      setIsAdmin(false);
-    } finally {
-      setAdminCheckComplete(true);
-    }
-  };
 
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -99,8 +75,7 @@ export const Navigation = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Double check admin status before navigation
-    if (adminCheckComplete && isAdmin) {
+    if (isAdmin) {
       navigate('/admin');
     } else {
       toast({
@@ -181,7 +156,7 @@ export const Navigation = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {adminCheckComplete && isAdmin && (
+                  {isAdmin && (
                     <DropdownMenuItem onClick={handleAdminNavigation}>
                       Admin Panel
                     </DropdownMenuItem>

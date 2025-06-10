@@ -47,23 +47,8 @@ const Admin = () => {
           return;
         }
 
-        // Check if user is admin using the RPC function
-        const { data: isAdmin, error } = await supabase.rpc('is_admin', { 
-          user_email: user.email 
-        });
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          toast({
-            title: "Error",
-            description: "Failed to verify admin status",
-            variant: "destructive",
-          });
-          navigate('/');
-          return;
-        }
-
-        if (!isAdmin) {
+        // Fast admin check without RPC calls
+        if (user.email !== 'sujalkhadgi13@gmail.com') {
           toast({
             title: "Access Denied",
             description: "You don't have admin privileges to access this page",
