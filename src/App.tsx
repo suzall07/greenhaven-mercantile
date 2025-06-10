@@ -18,15 +18,10 @@ import { ProductDetails } from "@/components/product/ProductDetails";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
-      refetchOnWindowFocus: false,
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      networkMode: 'always',
-    },
-    mutations: {
       retry: 1,
-      networkMode: 'always',
+      refetchOnWindowFocus: false,
+      gcTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 1 * 60 * 1000, // 1 minute
     },
   },
 });

@@ -14,17 +14,15 @@ const OutdoorPlants = () => {
   const { addToCart } = useCart();
   
   const { data: products = [], isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['products', 'outdoor'],
+    queryKey: ['products'],
     queryFn: getProducts,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const outdoorPlants = products?.filter(product => 
-    product.category?.toLowerCase().includes('outdoor')
-  ) || [];
+    product.category.toLowerCase().includes('outdoor')
+  );
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -35,7 +33,6 @@ const OutdoorPlants = () => {
   };
 
   const handleRetry = () => {
-    console.log('Retrying to fetch products...');
     refetch();
   };
 
@@ -70,7 +67,6 @@ const OutdoorPlants = () => {
   }
 
   if (error) {
-    console.error('Error loading outdoor plants:', error);
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navigation />
@@ -120,12 +116,7 @@ const OutdoorPlants = () => {
       
       <div className="container mx-auto px-4 pt-24 flex-grow">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Outdoor Plants</h1>
-            <p className="text-muted-foreground mt-2">
-              {outdoorPlants.length} plants available
-            </p>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Outdoor Plants</h1>
           {isRefetching && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -173,7 +164,7 @@ const OutdoorPlants = () => {
           ))}
         </div>
 
-        {outdoorPlants?.length === 0 && !isLoading && (
+        {outdoorPlants?.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
               <Eye className="h-8 w-8 text-muted-foreground" />

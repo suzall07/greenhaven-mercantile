@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { getProducts } from "@/lib/supabase";
 import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 import { useEffect, useState } from "react";
@@ -14,7 +15,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const heroSlides = [
   {
@@ -34,61 +34,57 @@ const heroSlides = [
   }
 ];
 
-const ProductSkeleton = () => (
-  <div className="product-card">
-    <Skeleton className="w-full h-64 rounded-md mb-4" />
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-20" />
-      <Skeleton className="h-6 w-3/4" />
-      <Skeleton className="h-5 w-16" />
-    </div>
-  </div>
-);
-
 const Index = () => {
+  const { toast } = useToast();
+  const { addToCart } = useCart();
   const [carouselApi, setCarouselApi] = useState<any>(null);
   
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
-    retry: 2,
-    retryDelay: 1000,
   });
 
   // Set up auto-sliding for carousel
   useEffect(() => {
     if (carouselApi) {
+      // Auto advance slide every 5 seconds
       const autoplayInterval = setInterval(() => {
         carouselApi.scrollNext();
       }, 5000);
 
+      // Clear interval on component unmount
       return () => {
         clearInterval(autoplayInterval);
       };
     }
   }, [carouselApi]);
 
-  if (error) {
-    console.error('Error on homepage:', error);
+  const handleAddToCart = async (productId: number) => {
+    try {
+      await addToCart(productId, 1);
+    } catch (error: any) {
+      // Error handling is done in the cart context
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-4">Welcome to Plant&deco</h2>
-            <p className="text-muted-foreground mb-6">
-              We're having trouble loading some content, but you can still browse our collection.
-            </p>
-            <div className="space-x-4">
-              <Link to="/indoor-plants">
-                <Button>Browse Indoor Plants</Button>
-              </Link>
-              <Link to="/outdoor-plants">
-                <Button variant="outline">Browse Outdoor Plants</Button>
-              </Link>
-            </div>
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24">
+          <div className="text-center text-red-500">
+            Error loading products. Please try again later.
           </div>
         </div>
       </div>
@@ -138,36 +134,29 @@ const Index = () => {
               Featured Products
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {isLoading ? (
-                // Show skeleton loaders while loading
-                Array.from({ length: 3 }).map((_, index) => (
-                  <ProductSkeleton key={index} />
-                ))
-              ) : (
-                products.slice(0, 3).map((product, index) => (
-                  <Link
-                    key={product.id}
-                    to={`/product/${product.id}`}
-                    className="product-card hover:shadow-md transition-shadow"
-                    style={{ animationDelay: `${0.2 * index}s` }}
-                  >
-                    <div className="mb-4">
-                      <LazyImage
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-64 object-cover rounded-md"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <span className="text-sm text-muted-foreground">
-                        {product.category}
-                      </span>
-                      <h3 className="text-lg font-semibold">{product.name}</h3>
-                      <p className="text-primary font-medium">Rs {product.price}</p>
-                    </div>
-                  </Link>
-                ))
-              )}
+              {products.slice(0, 3).map((product, index) => (
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  className="product-card hover:shadow-md transition-shadow"
+                  style={{ animationDelay: `${0.2 * index}s` }}
+                >
+                  <div className="mb-4">
+                    <LazyImage
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-64 object-cover rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">
+                      {product.category}
+                    </span>
+                    <h3 className="text-lg font-semibold">{product.name}</h3>
+                    <p className="text-primary font-medium">Rs {product.price}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
             <div className="text-center mt-8">
               <Link to="/indoor-plants">
@@ -177,41 +166,8 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Quick Navigation */}
-        <section className="py-12 px-4 bg-secondary/10">
-          <div className="container mx-auto">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">Shop by Category</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Link to="/indoor-plants" className="group">
-                <div className="relative h-64 rounded-lg overflow-hidden">
-                  <LazyImage
-                    src="https://images.unsplash.com/photo-1493663284031-b7e3aaa4cab7"
-                    alt="Indoor Plants"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h3 className="text-white text-2xl font-semibold">Indoor Plants</h3>
-                  </div>
-                </div>
-              </Link>
-              <Link to="/outdoor-plants" className="group">
-                <div className="relative h-64 rounded-lg overflow-hidden">
-                  <LazyImage
-                    src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b"
-                    alt="Outdoor Plants"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <h3 className="text-white text-2xl font-semibold">Outdoor Plants</h3>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </section>
-
         {/* About Section */}
-        <section className="py-12 px-4">
+        <section className="py-12 px-4 bg-secondary/10">
           <div className="container mx-auto">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-semibold mb-4">About Plant&deco</h2>
@@ -226,7 +182,7 @@ const Index = () => {
         </section>
 
         {/* Contact CTA */}
-        <section className="py-12 px-4 bg-secondary/10">
+        <section className="py-12 px-4">
           <div className="container mx-auto text-center">
             <h2 className="text-2xl md:text-3xl font-semibold mb-4">Need Help?</h2>
             <p className="text-muted-foreground mb-6">
