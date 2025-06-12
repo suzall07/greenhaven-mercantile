@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithEmail, signUpWithEmail, validateEmail } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +19,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -26,18 +28,29 @@ const Auth = () => {
     return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
+  // Real-time email validation
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailError("");
+    
+    if (value.trim() && !validateEmail(value.trim())) {
+      setEmailError("Please enter a valid email address (e.g., user@example.com)");
+    }
+  };
+
   const validateForm = () => {
     // Email validation
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
       throw new Error("Please enter your email address");
     }
     
-    if (!validateEmail(email)) {
-      throw new Error("Please enter a valid email address (e.g., example@domain.com)");
+    if (!validateEmail(cleanEmail)) {
+      throw new Error("Please enter a valid email address (e.g., user@example.com)");
     }
 
     // Password validation
-    if (!password) {
+    if (!password.trim()) {
       throw new Error("Please enter your password");
     }
 
@@ -56,7 +69,7 @@ const Auth = () => {
     }
 
     // Admin validation
-    if (isAdmin && !isAdminCredentials(email, password)) {
+    if (isAdmin && !isAdminCredentials(cleanEmail, password)) {
       throw new Error("Invalid admin credentials");
     }
   };
@@ -67,19 +80,18 @@ const Auth = () => {
     if (isLoading) return;
     
     setIsLoading(true);
+    setEmailError("");
 
     try {
       // Validate form inputs
       validateForm();
 
+      console.log(`Starting ${isLogin ? 'sign in' : 'sign up'} process...`);
+
       if (isLogin) {
         const { data, error } = await signInWithEmail(email, password);
         
         if (error) {
-          // Handle specific Supabase auth errors
-          if (error.message.includes("Invalid login credentials")) {
-            throw new Error("Invalid email or password. Please check your credentials and try again.");
-          }
           throw error;
         }
 
@@ -101,27 +113,36 @@ const Auth = () => {
         const { data, error } = await signUpWithEmail(email, password);
         
         if (error) {
-          // Handle specific signup errors
-          if (error.message.includes("User already registered")) {
-            throw new Error("An account with this email already exists. Please sign in instead.");
-          }
           throw error;
         }
         
-        toast({
-          title: "Account Created Successfully!",
-          description: "Welcome to Plant&deco! You can now start shopping.",
-        });
-        
-        // After successful signup, automatically sign them in
-        navigate("/");
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          toast({
+            title: "Account Created Successfully!",
+            description: "Please check your email and click the confirmation link to complete registration.",
+          });
+        } else {
+          toast({
+            title: "Account Created Successfully!",
+            description: "Welcome to Plant&deco! You can now start shopping.",
+          });
+          navigate("/");
+        }
       }
     } catch (error: any) {
       console.error('Auth error:', error);
       
+      let errorMessage = error.message || "An unexpected error occurred. Please try again.";
+      
+      // Handle specific error scenarios
+      if (errorMessage.includes('Network connection failed')) {
+        errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
+      }
+      
       toast({
         title: "Authentication Error",
-        description: error.message || "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -140,6 +161,7 @@ const Auth = () => {
     setIsLogin(!isLogin);
     setPassword("");
     setConfirmPassword("");
+    setEmailError("");
     if (!isLogin) setIsAdmin(false);
   };
 
@@ -199,15 +221,31 @@ const Auth = () => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="example@domain.com"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="user@example.com"
                   required
-                  className="h-11"
+                  className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                   disabled={isLoading}
                   autoComplete="email"
                 />
+                {emailError && (
+                  <Alert variant="destructive" className="py-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      {emailError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {!emailError && email && validateEmail(email.trim()) && (
+                  <Alert className="py-2 border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-sm text-green-700">
+                      Email format looks good!
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Please enter a valid email address
+                  Use a valid email like user@example.com
                 </p>
               </div>
               
@@ -249,13 +287,16 @@ const Auth = () => {
                     disabled={isLoading}
                     autoComplete="new-password"
                   />
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-red-500">Passwords do not match</p>
+                  )}
                 </div>
               )}
               
               <Button 
                 type="submit"
                 className={`w-full h-11 text-base ${isAdmin ? "bg-amber-600 hover:bg-amber-700" : ""}`} 
-                disabled={isLoading}
+                disabled={isLoading || (emailError !== "")}
               >
                 {isLoading ? (
                   <>

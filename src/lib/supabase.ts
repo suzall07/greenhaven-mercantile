@@ -8,7 +8,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    // Optimize auth settings for better performance
     detectSessionInUrl: true,
     storageKey: 'supabase.auth.token',
   }
@@ -41,57 +40,136 @@ export type Order = {
   created_at: string;
 };
 
-// Email validation helper
+// Enhanced email validation helper
 export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email.trim());
+  // More comprehensive email validation
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const trimmedEmail = email.trim();
+  
+  // Check basic format
+  if (!emailRegex.test(trimmedEmail)) {
+    return false;
+  }
+  
+  // Check for minimum requirements
+  if (trimmedEmail.length < 6 || trimmedEmail.length > 254) {
+    return false;
+  }
+  
+  // Check for valid domain
+  const parts = trimmedEmail.split('@');
+  if (parts.length !== 2) {
+    return false;
+  }
+  
+  const [local, domain] = parts;
+  if (local.length === 0 || local.length > 64) {
+    return false;
+  }
+  
+  if (domain.length === 0 || domain.length > 253) {
+    return false;
+  }
+  
+  // Check for valid TLD
+  if (!domain.includes('.') || domain.endsWith('.') || domain.startsWith('.')) {
+    return false;
+  }
+  
+  return true;
 }
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    // Validate email format before making the request
-    if (!validateEmail(email)) {
-      throw new Error('Please enter a valid email address');
+    // Enhanced email validation
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (!validateEmail(cleanEmail)) {
+      throw new Error('Please enter a valid email address (e.g., user@example.com)');
     }
 
+    console.log('Attempting sign in with email:', cleanEmail);
+    
     const result = await supabase.auth.signInWithPassword({ 
-      email: email.trim().toLowerCase(), 
-      password 
+      email: cleanEmail, 
+      password: password.trim()
     });
     
     if (result.error) {
-      console.error('Sign in error:', result.error);
+      console.error('Sign in error details:', result.error);
+      
+      // Handle specific error types
+      if (result.error.message.includes('Invalid login credentials')) {
+        throw new Error('Invalid email or password. Please check your credentials and try again.');
+      } else if (result.error.message.includes('Email not confirmed')) {
+        throw new Error('Please check your email and click the confirmation link before signing in.');
+      } else if (result.error.message.includes('Too many requests')) {
+        throw new Error('Too many login attempts. Please wait a few minutes before trying again.');
+      } else {
+        throw new Error(`Sign in failed: ${result.error.message}`);
+      }
+    }
+
+    console.log('Sign in successful:', result.data.user?.email);
+    return result;
+  } catch (error: any) {
+    console.error('Network error during sign in:', error);
+    
+    // Handle network errors
+    if (error.name === 'AuthRetryableFetchError' || error.message === 'Load failed') {
+      throw new Error('Network connection failed. Please check your internet connection and try again.');
     }
     
-    return result;
-  } catch (error) {
-    console.error('Network error during sign in:', error);
     throw error;
   }
 }
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
-    // Validate email format before making the request
-    if (!validateEmail(email)) {
-      throw new Error('Please enter a valid email address');
+    // Enhanced email validation
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (!validateEmail(cleanEmail)) {
+      throw new Error('Please enter a valid email address (e.g., user@example.com)');
     }
 
+    console.log('Attempting sign up with email:', cleanEmail);
+    
     const result = await supabase.auth.signUp({ 
-      email: email.trim().toLowerCase(), 
-      password,
+      email: cleanEmail, 
+      password: password.trim(),
       options: {
         emailRedirectTo: `${window.location.origin}/`
       }
     });
     
     if (result.error) {
-      console.error('Sign up error:', result.error);
+      console.error('Sign up error details:', result.error);
+      
+      // Handle specific error types
+      if (result.error.message.includes('User already registered')) {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      } else if (result.error.message.includes('Password should be')) {
+        throw new Error('Password must be at least 6 characters long.');
+      } else if (result.error.message.includes('Email address') && result.error.message.includes('invalid')) {
+        throw new Error('Please enter a valid email address (e.g., user@example.com)');
+      } else if (result.error.message.includes('signup is disabled')) {
+        throw new Error('Account registration is temporarily disabled. Please contact support.');
+      } else {
+        throw new Error(`Sign up failed: ${result.error.message}`);
+      }
+    }
+
+    console.log('Sign up result:', result.data);
+    return result;
+  } catch (error: any) {
+    console.error('Network error during sign up:', error);
+    
+    // Handle network errors
+    if (error.name === 'AuthRetryableFetchError' || error.message === 'Load failed') {
+      throw new Error('Network connection failed. Please check your internet connection and try again.');
     }
     
-    return result;
-  } catch (error) {
-    console.error('Network error during sign up:', error);
     throw error;
   }
 }
