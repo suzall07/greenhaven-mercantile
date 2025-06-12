@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -28,13 +27,20 @@ const Auth = () => {
     return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
-  // Real-time email validation
+  // Real-time email validation with better guidance
   const handleEmailChange = (value: string) => {
     setEmail(value);
     setEmailError("");
     
-    if (value.trim() && !validateEmail(value.trim())) {
-      setEmailError("Please enter a valid email address (e.g., user@example.com)");
+    if (value.trim()) {
+      if (!validateEmail(value.trim())) {
+        // Check if it's an example domain
+        if (value.includes('@example.') || value.includes('@email.')) {
+          setEmailError("Please use a real email address with a valid domain (e.g., john@gmail.com, sarah@yahoo.com)");
+        } else {
+          setEmailError("Please enter a valid email address format");
+        }
+      }
     }
   };
 
@@ -46,7 +52,12 @@ const Auth = () => {
     }
     
     if (!validateEmail(cleanEmail)) {
-      throw new Error("Please enter a valid email address (e.g., user@example.com)");
+      throw new Error("Please enter a valid email address with a real domain (e.g., john@gmail.com)");
+    }
+
+    // Check for example domains
+    if (cleanEmail.includes('@example.') || cleanEmail.includes('@email.')) {
+      throw new Error("Please use a real email address, not an example one. Try gmail.com, yahoo.com, or your actual email provider.");
     }
 
     // Password validation
@@ -222,7 +233,7 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  placeholder="user@example.com"
+                  placeholder="john@gmail.com"
                   required
                   className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                   disabled={isLoading}
@@ -236,7 +247,7 @@ const Auth = () => {
                     </AlertDescription>
                   </Alert>
                 )}
-                {!emailError && email && validateEmail(email.trim()) && (
+                {!emailError && email && validateEmail(email.trim()) && !email.includes('@example.') && !email.includes('@email.') && (
                   <Alert className="py-2 border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-sm text-green-700">
@@ -245,7 +256,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Use a valid email like user@example.com
+                  Use a real email like john@gmail.com or sarah@yahoo.com
                 </p>
               </div>
               

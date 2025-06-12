@@ -40,10 +40,9 @@ export type Order = {
   created_at: string;
 };
 
-// Enhanced email validation helper
+// Simplified email validation helper
 export function validateEmail(email: string): boolean {
-  // More comprehensive email validation
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const trimmedEmail = email.trim();
   
   // Check basic format
@@ -52,27 +51,7 @@ export function validateEmail(email: string): boolean {
   }
   
   // Check for minimum requirements
-  if (trimmedEmail.length < 6 || trimmedEmail.length > 254) {
-    return false;
-  }
-  
-  // Check for valid domain
-  const parts = trimmedEmail.split('@');
-  if (parts.length !== 2) {
-    return false;
-  }
-  
-  const [local, domain] = parts;
-  if (local.length === 0 || local.length > 64) {
-    return false;
-  }
-  
-  if (domain.length === 0 || domain.length > 253) {
-    return false;
-  }
-  
-  // Check for valid TLD
-  if (!domain.includes('.') || domain.endsWith('.') || domain.startsWith('.')) {
+  if (trimmedEmail.length < 5 || trimmedEmail.length > 254) {
     return false;
   }
   
@@ -81,11 +60,11 @@ export function validateEmail(email: string): boolean {
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    // Enhanced email validation
+    // Clean email
     const cleanEmail = email.trim().toLowerCase();
     
     if (!validateEmail(cleanEmail)) {
-      throw new Error('Please enter a valid email address (e.g., user@example.com)');
+      throw new Error('Please enter a valid email address with a real domain (e.g., john@gmail.com)');
     }
 
     console.log('Attempting sign in with email:', cleanEmail);
@@ -105,6 +84,8 @@ export async function signInWithEmail(email: string, password: string) {
         throw new Error('Please check your email and click the confirmation link before signing in.');
       } else if (result.error.message.includes('Too many requests')) {
         throw new Error('Too many login attempts. Please wait a few minutes before trying again.');
+      } else if (result.error.message.includes('email_address_invalid')) {
+        throw new Error('Please use a real email address with a valid domain (e.g., john@gmail.com, sarah@yahoo.com)');
       } else {
         throw new Error(`Sign in failed: ${result.error.message}`);
       }
@@ -126,11 +107,11 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
-    // Enhanced email validation
+    // Clean email
     const cleanEmail = email.trim().toLowerCase();
     
     if (!validateEmail(cleanEmail)) {
-      throw new Error('Please enter a valid email address (e.g., user@example.com)');
+      throw new Error('Please enter a valid email address with a real domain (e.g., john@gmail.com)');
     }
 
     console.log('Attempting sign up with email:', cleanEmail);
@@ -151,8 +132,8 @@ export async function signUpWithEmail(email: string, password: string) {
         throw new Error('An account with this email already exists. Please sign in instead.');
       } else if (result.error.message.includes('Password should be')) {
         throw new Error('Password must be at least 6 characters long.');
-      } else if (result.error.message.includes('Email address') && result.error.message.includes('invalid')) {
-        throw new Error('Please enter a valid email address (e.g., user@example.com)');
+      } else if (result.error.message.includes('email_address_invalid')) {
+        throw new Error('Please use a real email address with a valid domain (e.g., john@gmail.com, sarah@yahoo.com)');
       } else if (result.error.message.includes('signup is disabled')) {
         throw new Error('Account registration is temporarily disabled. Please contact support.');
       } else {
