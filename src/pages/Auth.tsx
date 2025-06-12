@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithEmail, signUpWithEmail } from "@/lib/supabase";
+import { signInWithEmail, signUpWithEmail, validateEmail } from "@/lib/supabase";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 
@@ -26,6 +26,41 @@ const Auth = () => {
     return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
+  const validateForm = () => {
+    // Email validation
+    if (!email.trim()) {
+      throw new Error("Please enter your email address");
+    }
+    
+    if (!validateEmail(email)) {
+      throw new Error("Please enter a valid email address (e.g., example@domain.com)");
+    }
+
+    // Password validation
+    if (!password) {
+      throw new Error("Please enter your password");
+    }
+
+    if (!isLogin) {
+      if (password.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+
+      if (!confirmPassword) {
+        throw new Error("Please confirm your password");
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+    }
+
+    // Admin validation
+    if (isAdmin && !isAdminCredentials(email, password)) {
+      throw new Error("Invalid admin credentials");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -34,26 +69,26 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // Validate form inputs
+      validateForm();
+
       if (isLogin) {
-        if (!email || !password) {
-          throw new Error("Please fill in all fields");
-        }
-
-        // For admin login, verify credentials first
-        if (isAdmin && !isAdminCredentials(email, password)) {
-          throw new Error("Invalid admin credentials");
-        }
-
         const { data, error } = await signInWithEmail(email, password);
         
-        if (error) throw error;
+        if (error) {
+          // Handle specific Supabase auth errors
+          if (error.message.includes("Invalid login credentials")) {
+            throw new Error("Invalid email or password. Please check your credentials and try again.");
+          }
+          throw error;
+        }
 
-        // Fast navigation without additional database calls
+        // Success - navigate based on admin status
         if (isAdmin) {
           navigate("/admin");
           toast({
             title: "Welcome back, admin!",
-            description: "You have successfully signed in.",
+            description: "You have successfully signed in to the admin panel.",
           });
         } else {
           navigate("/");
@@ -63,46 +98,30 @@ const Auth = () => {
           });
         }
       } else {
-        // Signup validation
-        if (!email || !password || !confirmPassword) {
-          throw new Error("Please fill in all fields");
-        }
-
-        if (password.length < 6) {
-          throw new Error("Password must be at least 6 characters long");
-        }
-
-        if (password !== confirmPassword) {
-          throw new Error("Passwords do not match");
-        }
-
-        const { error } = await signUpWithEmail(email, password);
+        const { data, error } = await signUpWithEmail(email, password);
         
-        if (error) throw error;
+        if (error) {
+          // Handle specific signup errors
+          if (error.message.includes("User already registered")) {
+            throw new Error("An account with this email already exists. Please sign in instead.");
+          }
+          throw error;
+        }
         
         toast({
-          title: "Welcome to Plant&deco!",
-          description: "Your account has been created successfully.",
+          title: "Account Created Successfully!",
+          description: "Welcome to Plant&deco! You can now start shopping.",
         });
+        
+        // After successful signup, automatically sign them in
         navigate("/");
       }
     } catch (error: any) {
       console.error('Auth error:', error);
       
-      // Provide more specific error messages
-      let errorMessage = error.message || "An unexpected error occurred";
-      
-      if (error.message?.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials.";
-      } else if (error.message?.includes("Email not confirmed")) {
-        errorMessage = "Please check your email and confirm your account before signing in.";
-      } else if (error.message?.includes("User already registered")) {
-        errorMessage = "An account with this email already exists. Please sign in instead.";
-      }
-      
       toast({
         title: "Authentication Error",
-        description: errorMessage,
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -181,12 +200,15 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="example@domain.com"
                   required
                   className="h-11"
                   disabled={isLoading}
                   autoComplete="email"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Please enter a valid email address
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -204,6 +226,11 @@ const Auth = () => {
                   disabled={isLoading}
                   autoComplete={isLogin ? "current-password" : "new-password"}
                 />
+                {!isLogin && (
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 6 characters required
+                  </p>
+                )}
               </div>
 
               {!isLogin && (

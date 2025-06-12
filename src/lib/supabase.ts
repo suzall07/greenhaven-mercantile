@@ -41,10 +41,21 @@ export type Order = {
   created_at: string;
 };
 
+// Email validation helper
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
 export async function signInWithEmail(email: string, password: string) {
   try {
+    // Validate email format before making the request
+    if (!validateEmail(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+
     const result = await supabase.auth.signInWithPassword({ 
-      email, 
+      email: email.trim().toLowerCase(), 
       password 
     });
     
@@ -55,14 +66,19 @@ export async function signInWithEmail(email: string, password: string) {
     return result;
   } catch (error) {
     console.error('Network error during sign in:', error);
-    throw new Error('Network error. Please check your connection and try again.');
+    throw error;
   }
 }
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
+    // Validate email format before making the request
+    if (!validateEmail(email)) {
+      throw new Error('Please enter a valid email address');
+    }
+
     const result = await supabase.auth.signUp({ 
-      email, 
+      email: email.trim().toLowerCase(), 
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`
@@ -76,7 +92,7 @@ export async function signUpWithEmail(email: string, password: string) {
     return result;
   } catch (error) {
     console.error('Network error during sign up:', error);
-    throw new Error('Network error. Please check your connection and try again.');
+    throw error;
   }
 }
 
