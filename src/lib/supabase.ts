@@ -40,33 +40,17 @@ export type Order = {
   created_at: string;
 };
 
-// Simplified email validation helper
+// Simplified email validation helper - very permissive
 export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const trimmedEmail = email.trim();
-  
-  // Check basic format
-  if (!emailRegex.test(trimmedEmail)) {
-    return false;
-  }
-  
-  // Check for minimum requirements
-  if (trimmedEmail.length < 5 || trimmedEmail.length > 254) {
-    return false;
-  }
-  
-  return true;
+  // Just check for basic @ symbol presence - very minimal validation
+  return email.includes('@') && email.length > 3;
 }
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    // Clean email
-    const cleanEmail = email.trim().toLowerCase();
+    // Clean email but don't validate strictly
+    const cleanEmail = email.trim();
     
-    if (!validateEmail(cleanEmail)) {
-      throw new Error('Please enter a valid email address');
-    }
-
     console.log('Attempting sign in with email:', cleanEmail);
     
     const result = await supabase.auth.signInWithPassword({ 
@@ -105,13 +89,9 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
-    // Clean email
-    const cleanEmail = email.trim().toLowerCase();
+    // Clean email but don't validate strictly
+    const cleanEmail = email.trim();
     
-    if (!validateEmail(cleanEmail)) {
-      throw new Error('Please enter a valid email address');
-    }
-
     console.log('Attempting sign up with email:', cleanEmail);
     
     const result = await supabase.auth.signUp({ 

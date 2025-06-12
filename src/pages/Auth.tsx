@@ -27,27 +27,27 @@ const Auth = () => {
     return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
-  // Real-time email validation
+  // Very permissive email validation
   const handleEmailChange = (value: string) => {
     setEmail(value);
     setEmailError("");
     
     if (value.trim()) {
       if (!validateEmail(value.trim())) {
-        setEmailError("Please enter a valid email address format");
+        setEmailError("Please include an @ symbol in your email");
       }
     }
   };
 
   const validateForm = () => {
-    // Email validation
+    // Minimal email validation
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       throw new Error("Please enter your email address");
     }
     
     if (!validateEmail(cleanEmail)) {
-      throw new Error("Please enter a valid email address");
+      throw new Error("Please include an @ symbol in your email");
     }
 
     // Password validation
@@ -223,7 +223,7 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  placeholder="john@gmail.com"
+                  placeholder="test@example.com"
                   required
                   className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                   disabled={isLoading}
@@ -246,7 +246,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Use any valid email like john@gmail.com or sarah@yahoo.com
+                  Use any email format you want - test@example.com, user@test.com, etc.
                 </p>
               </div>
               
