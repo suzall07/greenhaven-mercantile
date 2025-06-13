@@ -40,15 +40,15 @@ export type Order = {
   created_at: string;
 };
 
-// Simplified email validation helper - very permissive
+// Ultra-permissive email validation - accepts any dummy email
 export function validateEmail(email: string): boolean {
-  // Just check for basic @ symbol presence - very minimal validation
+  // Accept any email with @ symbol - perfect for dummy emails
   return email.includes('@') && email.length > 3;
 }
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    // Clean email but don't validate strictly
+    // Accept any email format for testing
     const cleanEmail = email.trim();
     
     console.log('Attempting sign in with email:', cleanEmail);
@@ -89,7 +89,7 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
-    // Clean email but don't validate strictly
+    // Accept any email format for account creation
     const cleanEmail = email.trim();
     
     console.log('Attempting sign up with email:', cleanEmail);

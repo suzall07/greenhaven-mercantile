@@ -27,7 +27,7 @@ const Auth = () => {
     return email === 'sujalkhadgi13@gmail.com' && password === 'Sujal@98';
   };
 
-  // Very permissive email validation
+  // Ultra-permissive email validation for dummy emails
   const handleEmailChange = (value: string) => {
     setEmail(value);
     setEmailError("");
@@ -40,7 +40,7 @@ const Auth = () => {
   };
 
   const validateForm = () => {
-    // Minimal email validation
+    // Ultra-minimal email validation - perfect for dummy emails
     const cleanEmail = email.trim();
     if (!cleanEmail) {
       throw new Error("Please enter your email address");
@@ -223,7 +223,7 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  placeholder="test@example.com"
+                  placeholder="one@two.com or test@example.com"
                   required
                   className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                   disabled={isLoading}
@@ -246,7 +246,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Use any email format you want - test@example.com, user@test.com, etc.
+                  Use any email format - one@two.com, test@example.com, user@demo.com, etc.
                 </p>
               </div>
               
