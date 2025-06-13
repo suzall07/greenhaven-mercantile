@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://qjxhtllsaevjfhlfqnvu.supabase.co';
@@ -105,13 +106,17 @@ export async function signUpWithEmail(email: string, password: string) {
     if (result.error) {
       console.error('Sign up error details:', result.error);
       
-      // Handle specific error types
+      // Handle specific error types including rate limiting
       if (result.error.message.includes('User already registered')) {
         throw new Error('An account with this email already exists. Please sign in instead.');
       } else if (result.error.message.includes('Password should be')) {
         throw new Error('Password must be at least 6 characters long.');
       } else if (result.error.message.includes('signup is disabled')) {
         throw new Error('Account registration is temporarily disabled. Please contact support.');
+      } else if (result.error.message.includes('email rate limit exceeded') || result.error.code === 'over_email_send_rate_limit') {
+        throw new Error('Too many signup attempts with this email. Please try with a different email address or wait 10-15 minutes before trying again.');
+      } else if (result.error.message.includes('rate limit')) {
+        throw new Error('Too many requests. Please wait a few minutes before trying again.');
       } else {
         throw new Error(`Sign up failed: ${result.error.message}`);
       }

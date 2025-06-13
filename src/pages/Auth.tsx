@@ -136,8 +136,10 @@ const Auth = () => {
       
       let errorMessage = error.message || "An unexpected error occurred. Please try again.";
       
-      // Handle specific error scenarios
-      if (errorMessage.includes('Network connection failed')) {
+      // Handle specific error scenarios with helpful suggestions
+      if (errorMessage.includes('email rate limit') || errorMessage.includes('Too many signup attempts')) {
+        errorMessage = "Email rate limit exceeded. Try using a different email address (like user2@demo.com, test3@example.com) or wait 10-15 minutes.";
+      } else if (errorMessage.includes('Network connection failed')) {
         errorMessage = "Unable to connect to the server. Please check your internet connection and try again.";
       }
       
@@ -223,7 +225,7 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => handleEmailChange(e.target.value)}
-                  placeholder="one@two.com or test@example.com"
+                  placeholder="user1@demo.com, test2@example.com, or any@email.com"
                   required
                   className={`h-11 ${emailError ? 'border-red-500' : ''}`}
                   disabled={isLoading}
@@ -246,7 +248,7 @@ const Auth = () => {
                   </Alert>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Use any email format - one@two.com, test@example.com, user@demo.com, etc.
+                  Use any email format - user1@demo.com, test2@example.com, myemail@test.com, etc.
                 </p>
               </div>
               
@@ -314,7 +316,14 @@ const Auth = () => {
 
             <div className="mt-6 text-center">
               <button
-                onClick={handleToggleAuthMode}
+                onClick={() => {
+                  if (isLoading) return;
+                  setIsLogin(!isLogin);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setEmailError("");
+                  if (!isLogin) setIsAdmin(false);
+                }}
                 disabled={isLoading}
                 className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
               >
