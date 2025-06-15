@@ -12,9 +12,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storageKey: 'supabase.auth.token',
   },
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'x-client-info': 'plant-deco-app'
+    }
+  }
 });
 
 // Test connection on initialization
 console.log('🚀 Supabase client initialized');
 console.log('📍 URL:', supabaseUrl);
 console.log('🔑 Has key:', !!supabaseAnonKey);
+
+// Test basic connectivity
+supabase.from('products').select('count()', { count: 'exact', head: true })
+  .then(({ count, error }) => {
+    if (error) {
+      console.error('🔴 Initial connection test failed:', error);
+    } else {
+      console.log('🟢 Connection test successful. Products count:', count);
+    }
+  });

@@ -13,23 +13,28 @@ const IndoorPlants = () => {
   const { data: products = [], isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
-    retry: 3,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false,
   });
 
-  console.log('All products in IndoorPlants:', products);
-  console.log('Products length:', products.length);
+  console.log('🏠 IndoorPlants - All products:', products);
+  console.log('📊 Products length:', products.length);
+  console.log('🔄 Loading state:', { isLoading, isRefetching });
+  console.log('❌ Error state:', error);
 
-  // Enhanced indoor plants filtering with more comprehensive category matching
+  // Enhanced indoor plants filtering
   const indoorPlants = products.filter(product => {
     if (!product || !product.category) {
-      console.log('Product missing category:', product);
+      console.log('⚠️ Product missing category:', product);
       return false;
     }
-    const category = product.category.toLowerCase().trim();
-    console.log('Checking category for indoor:', category);
     
-    // More comprehensive indoor plant category matching
+    const category = product.category.toLowerCase().trim();
+    console.log('🔍 Checking category for indoor:', category);
+    
+    // Check for indoor keywords
     const isIndoor = category.includes('indoor') || 
                     category.includes('house') || 
                     category.includes('interior') ||
@@ -41,30 +46,32 @@ const IndoorPlants = () => {
                     category.includes('apartment') ||
                     category.includes('low light') ||
                     category.includes('air purifying') ||
-                    // If no specific outdoor indicators, consider it indoor by default
+                    // If no outdoor indicators, consider it indoor
                     (!category.includes('outdoor') && 
                      !category.includes('garden') && 
                      !category.includes('yard') &&
                      !category.includes('patio') &&
                      !category.includes('landscaping'));
     
-    console.log('Is indoor plant?', isIndoor, 'for category:', category);
+    console.log('✅ Is indoor plant?', isIndoor, 'for category:', category);
     return isIndoor;
   });
 
-  console.log('Filtered indoor plants:', indoorPlants);
+  console.log('🏠 Filtered indoor plants:', indoorPlants);
+  console.log('📋 Indoor plants count:', indoorPlants.length);
 
   const handleRetry = () => {
-    console.log('Retrying product fetch...');
+    console.log('🔄 Retrying product fetch...');
     refetch();
   };
 
   if (isLoading) {
+    console.log('⏳ Showing loading state');
     return <LoadingState />;
   }
 
   if (error) {
-    console.error('Error loading products:', error);
+    console.error('❌ Error loading products:', error);
     return <ErrorState error={error} onRetry={handleRetry} isRefetching={isRefetching} />;
   }
 
