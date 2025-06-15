@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Eye, Loader2, RefreshCw } from "lucide-react";
-import { getProducts } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase/products";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 import { useCart } from "@/contexts/CartContext";
@@ -21,8 +21,8 @@ const IndoorPlants = () => {
   });
 
   const indoorPlants = products?.filter(product => 
-    product.category.toLowerCase().includes('indoor')
-  );
+    product.category?.toLowerCase().includes('indoor')
+  ) || [];
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -126,7 +126,7 @@ const IndoorPlants = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {indoorPlants?.map((product, index) => (
+          {indoorPlants.map((product, index) => (
             <div
               key={product.id}
               className="product-card"
@@ -170,7 +170,7 @@ const IndoorPlants = () => {
           ))}
         </div>
 
-        {indoorPlants?.length === 0 && (
+        {indoorPlants.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
               <Eye className="h-8 w-8 text-muted-foreground" />
