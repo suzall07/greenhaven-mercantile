@@ -28,10 +28,13 @@ serve(async (req) => {
 
     console.log('Initiating Khalti payment:', { amount, purchaseOrderId, purchaseOrderName });
 
+    // Convert amount to paisa and ensure it's an integer
+    const amountInPaisa = Math.round(amount * 100);
+
     const payload = {
       return_url: `${req.headers.get('origin')}/payment-success`,
       website_url: req.headers.get('origin'),
-      amount: amount * 100, // Convert to paisa
+      amount: amountInPaisa,
       purchase_order_id: purchaseOrderId,
       purchase_order_name: purchaseOrderName,
       customer_info: customerInfo,
