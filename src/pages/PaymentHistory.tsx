@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, CreditCard, RefreshCw, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase, getPaymentHistory } from "@/lib/supabase";
 
 interface PaymentRecord {
   id: string;
@@ -16,6 +15,7 @@ interface PaymentRecord {
   transaction_id: string;
   created_at: string;
   description?: string;
+  purchase_order_name?: string;
 }
 
 const PaymentHistory = () => {
@@ -24,42 +24,14 @@ const PaymentHistory = () => {
   const refreshParam = searchParams.get('refresh');
 
   const { data: payments = [], isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['payment-history', refreshParam], // Include refresh param to force refetch
-    queryFn: async (): Promise<PaymentRecord[]> => {
+    queryKey: ['payment-history', refreshParam],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      // For now, return mock data since we don't have payment history table
-      // In a real app, you would query your payments table here
-      return [
-        {
-          id: '1',
-          amount: 2500,
-          status: 'completed',
-          transaction_id: 'TXN1234567890',
-          created_at: new Date().toISOString(),
-          description: 'Indoor Plant Package'
-        },
-        {
-          id: '2',
-          amount: 1800,
-          status: 'completed',
-          transaction_id: 'TXN0987654321',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          description: 'Outdoor Plant Set'
-        },
-        // Add a new recent payment if coming from payment success
-        ...(refreshParam ? [{
-          id: '3',
-          amount: 1200,
-          status: 'completed' as const,
-          transaction_id: 'TXN' + Date.now(),
-          created_at: new Date().toISOString(),
-          description: 'Recent Plant Purchase'
-        }] : [])
-      ];
+      return await getPaymentHistory(user.id);
     },
     retry: 3,
   });
@@ -217,7 +189,7 @@ const PaymentHistory = () => {
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">
-                            {payment.description || 'Plant Purchase'}
+                            {payment.purchase_order_name || 'Plant Purchase'}
                           </h3>
                           <Badge className={getStatusColor(payment.status)}>
                             {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}

@@ -1,4 +1,3 @@
-
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
-import { updateCartItemQuantity, removeFromCart, supabase } from "@/lib/supabase";
+import { updateCartItemQuantity, removeFromCart, supabase, createPayment } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2 } from "lucide-react";
@@ -84,6 +83,17 @@ export const CartButton = () => {
       }
 
       const orderId = `order-${Date.now()}`;
+      
+      // Create payment record before initiating Khalti payment
+      await createPayment({
+        user_id: user.id,
+        amount: cartTotal,
+        status: 'pending',
+        transaction_id: orderId,
+        purchase_order_id: orderId,
+        purchase_order_name: `Cart Checkout - ${orderId}`,
+      });
+
       await initiateKhaltiPayment({
         amount: cartTotal,
         purchaseOrderId: orderId,
@@ -130,53 +140,56 @@ export const CartButton = () => {
             <p className="text-center text-muted-foreground">Your cart is empty</p>
           ) : (
             <>
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex space-x-4 items-center">
-                  <img
-                    src={item.product.image}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.product.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Rs {item.product.price}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Stock: {item.product.stock}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                        disabled={item.quantity <= 1}
-                      >
-                        -
-                      </Button>
-                      <span>{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                        disabled={item.quantity >= (item.product.stock || 0)}
-                      >
-                        +
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        onClick={() => handleRemoveItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+              {cartItems.map((item) => {
+                const isOutOfStock = !item.product.stock || item.product.stock <= 0;
+                return (
+                  <div key={item.id} className="flex space-x-4 items-center">
+                    <img
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium">{item.product.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Rs {item.product.price}
+                      </p>
+                      <p className={`text-xs ${isOutOfStock ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {isOutOfStock ? 'Out of Stock' : `Stock: ${item.product.stock}`}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                        >
+                          -
+                        </Button>
+                        <span>{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= (item.product.stock || 0) || isOutOfStock}
+                        >
+                          +
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => handleRemoveItem(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="pt-4 border-t">
                 <div className="flex justify-between font-medium">
                   <span>Total:</span>

@@ -1,9 +1,8 @@
-
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Product } from "@/lib/supabase";
 import { initiateKhaltiPayment } from "@/lib/khalti";
-import { supabase } from "@/lib/supabase";
+import { supabase, createPayment } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
@@ -41,6 +40,17 @@ export const ProductInfo = ({
       }
 
       const orderId = `order-${Date.now()}`;
+      
+      // Create payment record before initiating Khalti payment
+      await createPayment({
+        user_id: user.id,
+        amount: product.price,
+        status: 'pending',
+        transaction_id: orderId,
+        purchase_order_id: orderId,
+        purchase_order_name: `Purchase - ${product.name}`,
+      });
+
       await initiateKhaltiPayment({
         amount: product.price,
         purchaseOrderId: orderId,
