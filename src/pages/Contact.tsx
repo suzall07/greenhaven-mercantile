@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -13,13 +13,11 @@ const Contact = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
 
-  // Get current user
-  const [user, setUser] = useState<any>(null);
-  
-  // Check for current user on component mount
-  useState(() => {
+  // Get current user on component mount
+  useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -28,7 +26,7 @@ const Contact = () => {
       }
     };
     getCurrentUser();
-  });
+  }, []);
 
   // Fetch user's messages if logged in
   const { data: userMessages, refetch } = useQuery({
@@ -42,7 +40,10 @@ const Contact = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user messages:', error);
+        return [];
+      }
       return data;
     },
     enabled: !!user
@@ -63,37 +64,27 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Ensure user has a profile if logged in
-      if (user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+      console.log('Submitting message with user ID:', user?.id);
+      
+      const messageData = {
+        user_id: user?.id || null,
+        name: name.trim(),
+        email: email.trim(),
+        message: message.trim(),
+      };
 
-        if (profileError || !profile) {
-          const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert([{ id: user.id, email: user.email }]);
-          
-          if (createProfileError) {
-            console.error('Profile creation error:', createProfileError);
-          }
-        }
-      }
+      console.log('Message data:', messageData);
 
       const { error } = await supabase
         .from('contact_messages')
-        .insert([
-          {
-            user_id: user?.id || null,
-            name: name.trim(),
-            email: email.trim(),
-            message: message.trim(),
-          }
-        ]);
+        .insert([messageData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Message sent successfully');
 
       toast({
         title: "Success",
