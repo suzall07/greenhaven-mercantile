@@ -15,3 +15,9 @@ export {
   updateCartItemQuantity, 
   removeFromCart 
 } from './supabase/cart';
+export { 
+  createPayment, 
+  updatePaymentStatus, 
+  getPaymentHistory 
+} from './supabase/payments';
+export type { Payment } from './supabase/payments';
