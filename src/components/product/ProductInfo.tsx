@@ -1,6 +1,7 @@
+
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Product } from "@/lib/supabase";
+import { Product } from "@/lib/supabase/types";
 import { initiateKhaltiPayment } from "@/lib/khalti";
 import { supabase, createPayment } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
