@@ -10,6 +10,7 @@ import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 import IndoorPlants from "@/pages/IndoorPlants";
 import OutdoorPlants from "@/pages/OutdoorPlants";
+import Decoratives from "@/pages/Decoratives";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import PaymentHistory from "@/pages/PaymentHistory";
 import { CartProvider } from "@/contexts/CartContext";
@@ -39,6 +40,7 @@ function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/indoor-plants" element={<IndoorPlants />} />
             <Route path="/outdoor-plants" element={<OutdoorPlants />} />
+            <Route path="/decoratives" element={<Decoratives />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-history" element={<PaymentHistory />} />
             <Route path="/product/:productId" element={<ProductDetails />} />
