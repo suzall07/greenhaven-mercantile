@@ -143,13 +143,19 @@ const OutdoorPlants = () => {
                 </span>
                 <h3 className="text-lg font-semibold">{product.name}</h3>
                 <p className="text-muted-foreground">{product.description}</p>
-                <p className="text-primary font-medium">Rs {product.price}</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-primary font-medium">Rs {product.price}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Stock: {product.stock || 0}
+                  </p>
+                </div>
                 <div className="flex gap-2">
                   <Button 
                     className="flex-1"
                     onClick={() => handleAddToCart(product.id)}
+                    disabled={!product.stock || product.stock <= 0}
                   >
-                    Add to Cart
+                    {!product.stock || product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                   </Button>
                   <Button
                     variant="outline"

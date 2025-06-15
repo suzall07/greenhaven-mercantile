@@ -142,12 +142,16 @@ export const CartButton = () => {
                     <p className="text-sm text-muted-foreground">
                       Rs {item.product.price}
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Stock: {item.product.stock}
+                    </p>
                     <div className="flex items-center space-x-2 mt-2">
                       <Button
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        disabled={item.quantity <= 1}
                       >
                         -
                       </Button>
@@ -157,6 +161,7 @@ export const CartButton = () => {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= (item.product.stock || 0)}
                       >
                         +
                       </Button>

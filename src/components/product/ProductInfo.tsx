@@ -59,6 +59,8 @@ export const ProductInfo = ({
     }
   };
 
+  const isOutOfStock = !product.stock || product.stock <= 0;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
@@ -74,6 +76,11 @@ export const ProductInfo = ({
           <h1 className="text-3xl font-bold">{product.name}</h1>
           <p className="text-xl font-semibold mt-2">Rs {product.price}</p>
           <p className="text-muted-foreground mt-4">{product.description}</p>
+          <div className="mt-4">
+            <p className={`font-medium ${isOutOfStock ? 'text-destructive' : 'text-green-600'}`}>
+              {isOutOfStock ? 'Out of Stock' : `${product.stock} in stock`}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -99,17 +106,17 @@ export const ProductInfo = ({
           <Button 
             size="lg" 
             onClick={onAddToCart}
-            disabled={isLoading}
+            disabled={isLoading || isOutOfStock}
           >
-            Add to Cart
+            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
           </Button>
           <Button 
             size="lg" 
             variant="secondary"
             onClick={handleBuyNow}
-            disabled={isLoading}
+            disabled={isLoading || isOutOfStock}
           >
-            Buy Now with Khalti
+            {isOutOfStock ? 'Out of Stock' : 'Buy Now with Khalti'}
           </Button>
         </div>
       </div>

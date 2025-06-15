@@ -15,6 +15,19 @@ export async function getCartItems(userId: string) {
 }
 
 export async function addToCart(userId: string, productId: number, quantity: number) {
+  // First, get the product stock
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('stock')
+    .eq('id', productId)
+    .single();
+
+  if (productError) throw productError;
+
+  if (!product || product.stock === null || product.stock <= 0) {
+    throw new Error('Product is out of stock');
+  }
+
   const { data: existingItem, error: fetchError } = await supabase
     .from('cart_items')
     .select('*')
@@ -24,10 +37,21 @@ export async function addToCart(userId: string, productId: number, quantity: num
 
   if (fetchError) throw fetchError;
 
+  const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+  const newTotalQuantity = currentQuantityInCart + quantity;
+
+  if (newTotalQuantity > product.stock) {
+    const availableToAdd = product.stock - currentQuantityInCart;
+    if (availableToAdd <= 0) {
+      throw new Error('Cannot add more items. Stock limit reached.');
+    }
+    throw new Error(`Only ${availableToAdd} more items can be added. Stock limit: ${product.stock}`);
+  }
+
   if (existingItem) {
     const { error: updateError } = await supabase
       .from('cart_items')
-      .update({ quantity: existingItem.quantity + quantity })
+      .update({ quantity: newTotalQuantity })
       .eq('id', existingItem.id);
     
     if (updateError) throw updateError;
@@ -45,6 +69,30 @@ export async function addToCart(userId: string, productId: number, quantity: num
 }
 
 export async function updateCartItemQuantity(cartItemId: number, quantity: number) {
+  // Get the cart item with product stock info
+  const { data: cartItem, error: fetchError } = await supabase
+    .from('cart_items')
+    .select(`
+      *,
+      product:products(stock)
+    `)
+    .eq('id', cartItemId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  if (!cartItem.product || cartItem.product.stock === null) {
+    throw new Error('Product stock information not available');
+  }
+
+  if (quantity > cartItem.product.stock) {
+    throw new Error(`Cannot set quantity to ${quantity}. Only ${cartItem.product.stock} items in stock.`);
+  }
+
+  if (quantity <= 0) {
+    throw new Error('Quantity must be at least 1');
+  }
+
   const { error } = await supabase
     .from('cart_items')
     .update({ quantity })
