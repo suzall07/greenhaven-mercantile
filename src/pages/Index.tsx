@@ -41,24 +41,26 @@ const Index = () => {
   
   console.log('Index component rendering...');
   
-  const { data: products = [], isLoading, error } = useQuery({
+  const { data: products = [], isLoading, error, refetch } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
+    retry: 3,
+    retryDelay: 1000,
   });
 
-  console.log('Products data:', products);
-  console.log('Loading state:', isLoading);
-  console.log('Error state:', error);
+  console.log('Query state:', { 
+    products: products?.length || 0, 
+    isLoading, 
+    error: error?.message || null 
+  });
 
   // Set up auto-sliding for carousel
   useEffect(() => {
     if (carouselApi) {
-      // Auto advance slide every 5 seconds
       const autoplayInterval = setInterval(() => {
         carouselApi.scrollNext();
       }, 5000);
 
-      // Clear interval on component unmount
       return () => {
         clearInterval(autoplayInterval);
       };
@@ -70,7 +72,6 @@ const Index = () => {
       await addToCart(productId, 1);
     } catch (error: any) {
       console.error('Error adding to cart:', error);
-      // Error handling is done in the cart context
     }
   };
 
@@ -83,7 +84,8 @@ const Index = () => {
           <div className="text-center">
             <div className="animate-pulse">
               <div className="h-8 w-32 bg-gray-300 rounded mx-auto mb-4"></div>
-              <div className="h-4 w-48 bg-gray-300 rounded mx-auto"></div>
+              <div className="h-4 w-48 bg-gray-300 rounded mx-auto mb-4"></div>
+              <p className="text-sm text-gray-500">Loading products...</p>
             </div>
           </div>
         </div>
@@ -92,21 +94,30 @@ const Index = () => {
   }
 
   if (error) {
-    console.error('Error loading products:', error);
+    console.error('Rendering error state:', error);
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
           <div className="text-center text-red-500">
             <h2 className="text-xl font-semibold mb-2">Error loading products</h2>
-            <p>Please try refreshing the page</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-4"
-              variant="outline"
-            >
-              Refresh Page
-            </Button>
+            <p className="mb-4">{error.message || 'Please try refreshing the page'}</p>
+            <div className="space-x-4">
+              <Button 
+                onClick={() => refetch()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Retry
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Refresh Page
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -193,9 +204,12 @@ const Index = () => {
             ) : (
               <div className="text-center py-12">
                 <h3 className="text-xl font-semibold mb-4">No Products Available</h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground mb-4">
                   We're working on adding products to our collection. Check back soon!
                 </p>
+                <Button onClick={() => refetch()} variant="outline">
+                  Try Again
+                </Button>
               </div>
             )}
           </div>
