@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -154,16 +153,6 @@ const OutdoorPlants = () => {
             </div>
           )}
         </div>
-
-        {/* Debug info in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-6 p-4 bg-muted rounded-lg">
-            <h3 className="font-semibold mb-2">Debug Info:</h3>
-            <p>Total products loaded: {products.length}</p>
-            <p>Outdoor plants found: {outdoorPlants.length}</p>
-            <p>Categories in database: {products.map(p => p.category).filter(Boolean).join(', ')}</p>
-          </div>
-        )}
         
         {outdoorPlants.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
