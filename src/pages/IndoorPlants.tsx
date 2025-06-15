@@ -20,19 +20,35 @@ const IndoorPlants = () => {
   console.log('All products in IndoorPlants:', products);
   console.log('Products length:', products.length);
 
+  // Enhanced indoor plants filtering with more comprehensive category matching
   const indoorPlants = products.filter(product => {
     if (!product || !product.category) {
       console.log('Product missing category:', product);
       return false;
     }
-    const category = product.category.toLowerCase();
+    const category = product.category.toLowerCase().trim();
     console.log('Checking category for indoor:', category);
+    
+    // More comprehensive indoor plant category matching
     const isIndoor = category.includes('indoor') || 
                     category.includes('house') || 
                     category.includes('interior') ||
                     category.includes('inside') ||
-                    category.includes('room');
-    console.log('Is indoor plant?', isIndoor);
+                    category.includes('room') ||
+                    category.includes('home') ||
+                    category.includes('desk') ||
+                    category.includes('office') ||
+                    category.includes('apartment') ||
+                    category.includes('low light') ||
+                    category.includes('air purifying') ||
+                    // If no specific outdoor indicators, consider it indoor by default
+                    (!category.includes('outdoor') && 
+                     !category.includes('garden') && 
+                     !category.includes('yard') &&
+                     !category.includes('patio') &&
+                     !category.includes('landscaping'));
+    
+    console.log('Is indoor plant?', isIndoor, 'for category:', category);
     return isIndoor;
   });
 

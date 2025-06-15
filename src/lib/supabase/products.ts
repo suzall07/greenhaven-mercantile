@@ -23,6 +23,17 @@ export async function getProducts() {
       return [];
     }
     
+    // Log each product's category for debugging
+    data.forEach((product, index) => {
+      console.log(`Product ${index + 1}:`, {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        stock: product.stock
+      });
+    });
+    
     // Validate product data
     const validProducts = data.filter(product => {
       if (!product.id || !product.name || !product.price) {
