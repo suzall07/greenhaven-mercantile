@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Eye, Loader2, RefreshCw } from "lucide-react";
+import { Eye, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { getProducts } from "@/lib/supabase/products";
 import { useNavigate } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
@@ -20,13 +20,23 @@ const IndoorPlants = () => {
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  console.log('All products:', products);
+  console.log('All products in IndoorPlants:', products);
+  console.log('Products length:', products.length);
 
   const indoorPlants = products.filter(product => {
-    if (!product || !product.category) return false;
+    if (!product || !product.category) {
+      console.log('Product missing category:', product);
+      return false;
+    }
     const category = product.category.toLowerCase();
-    console.log('Checking category:', category);
-    return category.includes('indoor') || category.includes('house') || category.includes('interior');
+    console.log('Checking category for indoor:', category);
+    const isIndoor = category.includes('indoor') || 
+                    category.includes('house') || 
+                    category.includes('interior') ||
+                    category.includes('inside') ||
+                    category.includes('room');
+    console.log('Is indoor plant?', isIndoor);
+    return isIndoor;
   });
 
   console.log('Filtered indoor plants:', indoorPlants);
@@ -40,9 +50,11 @@ const IndoorPlants = () => {
   };
 
   const handleRetry = () => {
+    console.log('Retrying product fetch...');
     refetch();
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -73,6 +85,7 @@ const IndoorPlants = () => {
     );
   }
 
+  // Error state
   if (error) {
     console.error('Error loading products:', error);
     return (
@@ -82,11 +95,14 @@ const IndoorPlants = () => {
           <div className="text-center max-w-md mx-auto">
             <div className="mb-4">
               <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center mb-4">
-                <RefreshCw className="h-8 w-8 text-destructive" />
+                <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
               <h2 className="text-xl font-semibold mb-2">Failed to load plants</h2>
               <p className="text-muted-foreground mb-4">
                 We're having trouble loading the indoor plants. Please check your connection and try again.
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Error: {error instanceof Error ? error.message : 'Unknown error'}
               </p>
             </div>
             <Button 
@@ -118,13 +134,19 @@ const IndoorPlants = () => {
     );
   }
 
+  // Success state
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
       <div className="container mx-auto px-4 pt-24 flex-grow">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Indoor Plants</h1>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Indoor Plants</h1>
+            <p className="text-muted-foreground mt-2">
+              Total products: {products.length} | Indoor plants: {indoorPlants.length}
+            </p>
+          </div>
           {isRefetching && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -132,59 +154,92 @@ const IndoorPlants = () => {
             </div>
           )}
         </div>
+
+        {/* Debug info in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-6 p-4 bg-muted rounded-lg">
+            <h3 className="font-semibold mb-2">Debug Info:</h3>
+            <p>Total products loaded: {products.length}</p>
+            <p>Indoor plants found: {indoorPlants.length}</p>
+            <p>Categories in database: {products.map(p => p.category).filter(Boolean).join(', ')}</p>
+          </div>
+        )}
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {indoorPlants.map((product, index) => (
-            <div
-              key={product.id}
-              className="product-card"
-              style={{ animationDelay: `${0.2 * index}s` }}
-            >
-              <LazyImage
-                src={product.image}
-                alt={product.name}
-                className="w-full h-64 object-cover rounded-md mb-4"
-              />
-              <div className="space-y-2">
-                <span className="text-sm text-muted-foreground">
-                  {product.category}
-                </span>
-                <h3 className="text-lg font-semibold">{product.name}</h3>
-                <p className="text-muted-foreground">{product.description}</p>
-                <div className="flex justify-between items-center">
-                  <p className="text-primary font-medium">Rs {product.price}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Stock: {product.stock || 0}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1"
-                    onClick={() => handleAddToCart(product.id)}
-                    disabled={!product.stock || product.stock <= 0}
-                  >
-                    {!product.stock || product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/product/${product.id}`)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
+        {indoorPlants.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {indoorPlants.map((product, index) => (
+              <div
+                key={product.id}
+                className="product-card"
+                style={{ animationDelay: `${0.2 * index}s` }}
+              >
+                <LazyImage
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-64 object-cover rounded-md mb-4"
+                />
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">
+                    {product.category}
+                  </span>
+                  <h3 className="text-lg font-semibold">{product.name}</h3>
+                  <p className="text-muted-foreground">{product.description}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-primary font-medium">Rs {product.price}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Stock: {product.stock || 0}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => handleAddToCart(product.id)}
+                      disabled={!product.stock || product.stock <= 0}
+                    >
+                      {!product.stock || product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-8 w-8 text-muted-foreground" />
             </div>
-          ))}
-        </div>
-
-        {indoorPlants.length === 0 && !isLoading && (
+            <h3 className="text-lg font-semibold mb-2">No products in database</h3>
+            <p className="text-muted-foreground mb-4">
+              It looks like there are no products in the database yet.
+            </p>
+            <Button onClick={() => navigate('/admin')} variant="outline">
+              Add Products (Admin)
+            </Button>
+          </div>
+        ) : (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
               <Eye className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No indoor plants found</h3>
-            <p className="text-muted-foreground">Check back later for new arrivals!</p>
+            <p className="text-muted-foreground mb-4">
+              We have {products.length} products total, but none are categorized as indoor plants.
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => navigate('/outdoor-plants')} variant="outline">
+                View Outdoor Plants
+              </Button>
+              <Button onClick={() => navigate('/admin')} variant="outline">
+                Add Indoor Plants (Admin)
+              </Button>
+            </div>
           </div>
         )}
       </div>
