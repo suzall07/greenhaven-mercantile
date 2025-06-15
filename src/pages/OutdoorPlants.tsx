@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -142,9 +143,6 @@ const OutdoorPlants = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Outdoor Plants</h1>
-            <p className="text-muted-foreground mt-2">
-              Total products: {products.length} | Outdoor plants: {outdoorPlants.length}
-            </p>
           </div>
           {isRefetching && (
             <div className="flex items-center text-sm text-muted-foreground">
