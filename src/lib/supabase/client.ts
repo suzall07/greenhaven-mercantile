@@ -12,19 +12,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storageKey: 'supabase.auth.token',
   },
-  global: {
-    headers: {
-      'x-my-custom-header': 'plant-deco-app',
-    },
-  },
-  db: {
-    schema: 'public',
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 2,
-    },
-  },
 });
 
 // Test connection on initialization
