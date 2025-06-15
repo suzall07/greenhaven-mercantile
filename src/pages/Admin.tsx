@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AddProductForm } from "@/components/admin/AddProductForm";
 import { ProductList } from "@/components/admin/ProductList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageManagement } from "@/components/admin/MessageManagement";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -95,16 +96,23 @@ const Admin = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 pt-24">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold">Admin Dashboard</h1>
-          <Button variant="ghost" onClick={handleLogout}>
-            <LogOut className="h-5 w-5 mr-2" />
-            Logout
-          </Button>
-        </div>
-
-        <AddProductForm />
-        <ProductList />
+        <h1 className="text-4xl font-bold mb-8">Admin Dashboard</h1>
+        
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="products" className="space-y-6">
+            <AddProductForm />
+            <ProductList />
+          </TabsContent>
+          
+          <TabsContent value="messages" className="space-y-6">
+            <MessageManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
