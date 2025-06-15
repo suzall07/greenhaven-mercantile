@@ -20,9 +20,16 @@ const OutdoorPlants = () => {
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const outdoorPlants = products?.filter(product => 
-    product.category?.toLowerCase().includes('outdoor')
-  ) || [];
+  console.log('All products:', products);
+
+  const outdoorPlants = products.filter(product => {
+    if (!product || !product.category) return false;
+    const category = product.category.toLowerCase();
+    console.log('Checking category:', category);
+    return category.includes('outdoor') || category.includes('garden') || category.includes('exterior');
+  });
+
+  console.log('Filtered outdoor plants:', outdoorPlants);
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -67,6 +74,7 @@ const OutdoorPlants = () => {
   }
 
   if (error) {
+    console.error('Error loading products:', error);
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navigation />

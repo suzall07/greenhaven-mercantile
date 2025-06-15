@@ -20,9 +20,16 @@ const IndoorPlants = () => {
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const indoorPlants = products?.filter(product => 
-    product.category?.toLowerCase().includes('indoor')
-  ) || [];
+  console.log('All products:', products);
+
+  const indoorPlants = products.filter(product => {
+    if (!product || !product.category) return false;
+    const category = product.category.toLowerCase();
+    console.log('Checking category:', category);
+    return category.includes('indoor') || category.includes('house') || category.includes('interior');
+  });
+
+  console.log('Filtered indoor plants:', indoorPlants);
 
   const handleAddToCart = async (productId: number) => {
     try {
@@ -67,6 +74,7 @@ const IndoorPlants = () => {
   }
 
   if (error) {
+    console.error('Error loading products:', error);
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navigation />
