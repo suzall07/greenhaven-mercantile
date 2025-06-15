@@ -39,28 +39,20 @@ const Index = () => {
   const { addToCart } = useCart();
   const [carouselApi, setCarouselApi] = useState<any>(null);
   
-  console.log('Index component rendering...');
-  
-  const { data: products = [], isLoading, error, refetch } = useQuery({
+  const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
-    retry: 3,
-    retryDelay: 1000,
-  });
-
-  console.log('Query state:', { 
-    products: products?.length || 0, 
-    isLoading, 
-    error: error?.message || null 
   });
 
   // Set up auto-sliding for carousel
   useEffect(() => {
     if (carouselApi) {
+      // Auto advance slide every 5 seconds
       const autoplayInterval = setInterval(() => {
         carouselApi.scrollNext();
       }, 5000);
 
+      // Clear interval on component unmount
       return () => {
         clearInterval(autoplayInterval);
       };
@@ -71,60 +63,33 @@ const Index = () => {
     try {
       await addToCart(productId, 1);
     } catch (error: any) {
-      console.error('Error adding to cart:', error);
+      // Error handling is done in the cart context
     }
   };
 
   if (isLoading) {
-    console.log('Showing loading state...');
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
-          <div className="text-center">
-            <div className="animate-pulse">
-              <div className="h-8 w-32 bg-gray-300 rounded mx-auto mb-4"></div>
-              <div className="h-4 w-48 bg-gray-300 rounded mx-auto mb-4"></div>
-              <p className="text-sm text-gray-500">Loading products...</p>
-            </div>
-          </div>
+          <div className="text-center">Loading...</div>
         </div>
       </div>
     );
   }
 
   if (error) {
-    console.error('Rendering error state:', error);
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
           <div className="text-center text-red-500">
-            <h2 className="text-xl font-semibold mb-2">Error loading products</h2>
-            <p className="mb-4">{error.message || 'Please try refreshing the page'}</p>
-            <div className="space-x-4">
-              <Button 
-                onClick={() => refetch()} 
-                className="mt-4"
-                variant="outline"
-              >
-                Retry
-              </Button>
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="mt-4"
-                variant="outline"
-              >
-                Refresh Page
-              </Button>
-            </div>
+            Error loading products. Please try again later.
           </div>
         </div>
       </div>
     );
   }
-
-  console.log('Rendering main content with products:', products.length);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -168,50 +133,36 @@ const Index = () => {
             <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
               Featured Products
             </h2>
-            {products.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {products.slice(0, 3).map((product, index) => (
-                    <Link
-                      key={product.id}
-                      to={`/product/${product.id}`}
-                      className="product-card hover:shadow-md transition-shadow"
-                      style={{ animationDelay: `${0.2 * index}s` }}
-                    >
-                      <div className="mb-4">
-                        <LazyImage
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-64 object-cover rounded-md"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <span className="text-sm text-muted-foreground">
-                          {product.category}
-                        </span>
-                        <h3 className="text-lg font-semibold">{product.name}</h3>
-                        <p className="text-primary font-medium">Rs {product.price}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <div className="text-center mt-8">
-                  <Link to="/indoor-plants">
-                    <Button variant="outline">View All Products</Button>
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold mb-4">No Products Available</h3>
-                <p className="text-muted-foreground mb-4">
-                  We're working on adding products to our collection. Check back soon!
-                </p>
-                <Button onClick={() => refetch()} variant="outline">
-                  Try Again
-                </Button>
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {products.slice(0, 3).map((product, index) => (
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  className="product-card hover:shadow-md transition-shadow"
+                  style={{ animationDelay: `${0.2 * index}s` }}
+                >
+                  <div className="mb-4">
+                    <LazyImage
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-64 object-cover rounded-md"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">
+                      {product.category}
+                    </span>
+                    <h3 className="text-lg font-semibold">{product.name}</h3>
+                    <p className="text-primary font-medium">Rs {product.price}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link to="/indoor-plants">
+                <Button variant="outline">View All Products</Button>
+              </Link>
+            </div>
           </div>
         </section>
 
