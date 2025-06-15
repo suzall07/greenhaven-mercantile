@@ -83,6 +83,25 @@ export const ProductDetails = () => {
         throw new Error("Please write a comment for your review");
       }
 
+      // First, ensure the user has a profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        // Create profile if it doesn't exist
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert([{ id: user.id, email: user.email }]);
+        
+        if (createProfileError) {
+          throw new Error("Failed to create user profile. Please try again.");
+        }
+      }
+
+      // Now insert the review
       const { error } = await supabase
         .from('product_reviews')
         .insert([{
@@ -104,6 +123,7 @@ export const ProductDetails = () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', productId] });
     },
     onError: (error: any) => {
+      console.error('Review submission error:', error);
       toast({
         title: "Error",
         description: error.message,
