@@ -11,17 +11,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, addToCart, supabase } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase/products";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { LazyImage } from "@/components/LazyImage";
 
 export const SearchComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { refetchCart } = useCart();
+  const { addToCart, refetchCart } = useCart();
 
   const { data: products } = useQuery({
     queryKey: ['products'],
@@ -46,7 +48,7 @@ export const SearchComponent = () => {
         return;
       }
 
-      await addToCart(user.id, productId, 1);
+      await addToCart(productId, 1);
       await refetchCart();
       toast({
         title: "Added to cart",
@@ -80,27 +82,39 @@ export const SearchComponent = () => {
             className="mb-4"
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
-            {filteredProducts?.map((product) => (
-              <div key={product.id} className="flex space-x-4 p-4 bg-card rounded-lg">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-20 h-20 object-cover rounded"
-                />
-                <div className="flex-1">
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    ${product.price}
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => handleAddToCart(product.id)}
-                  >
-                    Add to Cart
-                  </Button>
+            {filteredProducts?.map((product) => {
+              const isOutOfStock = !product.stock || product.stock <= 0;
+              return (
+                <div key={product.id} className="flex space-x-4 p-4 bg-card rounded-lg">
+                  <LazyImage
+                    src={product.image}
+                    alt={product.name}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Rs {product.price}
+                    </p>
+                    <p className={`text-xs mb-2 ${isOutOfStock ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {isOutOfStock ? 'Out of Stock' : `Stock: ${product.stock}`}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddToCart(product.id)}
+                      disabled={isOutOfStock}
+                    >
+                      {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                    </Button>
+                  </div>
                 </div>
+              );
+            })}
+            {searchQuery && filteredProducts?.length === 0 && (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">No products found matching "{searchQuery}"</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </SheetContent>

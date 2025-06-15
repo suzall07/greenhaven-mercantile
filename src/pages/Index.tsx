@@ -2,12 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
-import { getProducts } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase/products";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { LazyImage } from "@/components/LazyImage";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
   CarouselContent,
@@ -34,14 +35,29 @@ const heroSlides = [
   }
 ];
 
+const LoadingSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="space-y-4">
+        <Skeleton className="w-full h-64 rounded-md" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+    ))}
+  </div>
+);
+
 const Index = () => {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [carouselApi, setCarouselApi] = useState<any>(null);
   
-  const { data: products = [], isLoading, error } = useQuery({
+  const { data: products = [], isLoading, error, refetch } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Set up auto-sliding for carousel
@@ -67,24 +83,25 @@ const Index = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 pt-24">
-          <div className="text-center">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+  const handleRetry = () => {
+    refetch();
+  };
 
   if (error) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
-          <div className="text-center text-red-500">
-            Error loading products. Please try again later.
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-red-600">
+              Error loading products
+            </h2>
+            <p className="text-muted-foreground">
+              {error instanceof Error ? error.message : 'Something went wrong. Please try again.'}
+            </p>
+            <Button onClick={handleRetry} variant="outline">
+              Retry Loading
+            </Button>
           </div>
         </div>
       </div>
@@ -133,36 +150,49 @@ const Index = () => {
             <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
               Featured Products
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {products.slice(0, 3).map((product, index) => (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.id}`}
-                  className="product-card hover:shadow-md transition-shadow"
-                  style={{ animationDelay: `${0.2 * index}s` }}
-                >
-                  <div className="mb-4">
-                    <LazyImage
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-64 object-cover rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <span className="text-sm text-muted-foreground">
-                      {product.category}
-                    </span>
-                    <h3 className="text-lg font-semibold">{product.name}</h3>
-                    <p className="text-primary font-medium">Rs {product.price}</p>
-                  </div>
+            {isLoading ? (
+              <LoadingSkeleton />
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {products.slice(0, 3).map((product, index) => (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className="product-card hover:shadow-md transition-shadow"
+                    style={{ animationDelay: `${0.2 * index}s` }}
+                  >
+                    <div className="mb-4">
+                      <LazyImage
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-64 object-cover rounded-md"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-sm text-muted-foreground">
+                        {product.category}
+                      </span>
+                      <h3 className="text-lg font-semibold">{product.name}</h3>
+                      <p className="text-primary font-medium">Rs {product.price}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">No products available at the moment.</p>
+                <Button onClick={handleRetry} variant="outline" className="mt-4">
+                  Refresh Products
+                </Button>
+              </div>
+            )}
+            {products.length > 0 && (
+              <div className="text-center mt-8">
+                <Link to="/indoor-plants">
+                  <Button variant="outline">View All Products</Button>
                 </Link>
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link to="/indoor-plants">
-                <Button variant="outline">View All Products</Button>
-              </Link>
-            </div>
+              </div>
+            )}
           </div>
         </section>
 
