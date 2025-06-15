@@ -2,56 +2,47 @@
 import { supabase } from './client';
 
 export async function getProducts() {
-  console.log('🔍 Starting product fetch...');
+  console.log('Fetching products from database...');
   
   try {
-    // Test the connection first
-    const { data: testData, error: testError } = await supabase
-      .from('products')
-      .select('count(*)')
-      .single();
-    
-    console.log('📊 Connection test:', { testData, testError });
-    
-    if (testError) {
-      console.error('❌ Connection test failed:', testError.message);
-      return [];
-    }
-
-    // Fetch all products with a simple query
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
     
-    console.log('📊 Supabase response:', { data, error });
-    
     if (error) {
-      console.error('❌ Supabase error:', error.message);
-      // For debugging, let's see what specific error we're getting
-      if (error.code === 'PGRST116') {
-        console.log('💡 This might be a table access issue. Checking if products table exists...');
+      console.error('Supabase error fetching products:', error);
+      throw new Error(`Failed to fetch products: ${error.message}`);
+    }
+    
+    console.log('Raw data from Supabase:', data);
+    console.log('Number of products fetched:', data?.length || 0);
+    
+    if (!data || data.length === 0) {
+      console.warn('No products found in database');
+      return [];
+    }
+    
+    // Validate product data
+    const validProducts = data.filter(product => {
+      if (!product.id || !product.name || !product.price) {
+        console.warn('Invalid product found:', product);
+        return false;
       }
-      return [];
-    }
+      return true;
+    });
     
-    if (!data) {
-      console.warn('⚠️ No data returned from query');
-      return [];
-    }
-    
-    console.log('✅ Products fetched successfully:', data.length, 'products');
-    console.log('📋 First product sample:', data[0]);
-    
-    return data;
+    console.log('Valid products after filtering:', validProducts.length);
+    return validProducts;
   } catch (error) {
-    console.error('💥 Unexpected error fetching products:', error);
-    // Return empty array to prevent app crashes
-    return [];
+    console.error('Error in getProducts function:', error);
+    throw error;
   }
 }
 
 export async function getProductById(id: number) {
+  console.log('Fetching product by ID:', id);
+  
   try {
     const { data, error } = await supabase
       .from('products')
@@ -64,6 +55,7 @@ export async function getProductById(id: number) {
       throw new Error(`Failed to fetch product: ${error.message}`);
     }
     
+    console.log('Product fetched by ID:', data);
     return data;
   } catch (error) {
     console.error('Error in getProductById function:', error);
@@ -72,6 +64,8 @@ export async function getProductById(id: number) {
 }
 
 export async function getProductsByCategory(category: string) {
+  console.log('Fetching products by category:', category);
+  
   try {
     const { data, error } = await supabase
       .from('products')
@@ -84,9 +78,10 @@ export async function getProductsByCategory(category: string) {
       throw new Error(`Failed to fetch products by category: ${error.message}`);
     }
     
+    console.log('Products fetched by category:', data);
     return data || [];
   } catch (error) {
     console.error('Error in getProductsByCategory function:', error);
-    return [];
+    throw error;
   }
 }

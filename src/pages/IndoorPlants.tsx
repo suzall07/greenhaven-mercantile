@@ -1,100 +1,243 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
+import { Button } from "@/components/ui/button";
+import { Eye, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { getProducts } from "@/lib/supabase/products";
-import { LoadingState } from "@/components/plants/LoadingState";
-import { ErrorState } from "@/components/plants/ErrorState";
-import { EmptyState } from "@/components/plants/EmptyState";
-import { ProductGrid } from "@/components/plants/ProductGrid";
-import { PageHeader } from "@/components/plants/PageHeader";
-import { PageFooter } from "@/components/plants/PageFooter";
+import { useNavigate } from "react-router-dom";
+import { LazyImage } from "@/components/LazyImage";
+import { useCart } from "@/contexts/CartContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const IndoorPlants = () => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  
   const { data: products = [], isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  console.log('🏠 IndoorPlants - All products:', products);
-  console.log('📊 Products length:', products.length);
-  console.log('🔄 Loading state:', { isLoading, isRefetching });
-  console.log('❌ Error state:', error);
+  console.log('All products in IndoorPlants:', products);
+  console.log('Products length:', products.length);
 
-  // Enhanced indoor plants filtering
   const indoorPlants = products.filter(product => {
     if (!product || !product.category) {
-      console.log('⚠️ Product missing category:', product);
+      console.log('Product missing category:', product);
       return false;
     }
-    
-    const category = product.category.toLowerCase().trim();
-    console.log('🔍 Checking category for indoor:', category);
-    
-    // Check for indoor keywords
+    const category = product.category.toLowerCase();
+    console.log('Checking category for indoor:', category);
     const isIndoor = category.includes('indoor') || 
                     category.includes('house') || 
                     category.includes('interior') ||
                     category.includes('inside') ||
-                    category.includes('room') ||
-                    category.includes('home') ||
-                    category.includes('desk') ||
-                    category.includes('office') ||
-                    category.includes('apartment') ||
-                    category.includes('low light') ||
-                    category.includes('air purifying') ||
-                    // If no outdoor indicators, consider it indoor
-                    (!category.includes('outdoor') && 
-                     !category.includes('garden') && 
-                     !category.includes('yard') &&
-                     !category.includes('patio') &&
-                     !category.includes('landscaping'));
-    
-    console.log('✅ Is indoor plant?', isIndoor, 'for category:', category);
+                    category.includes('room');
+    console.log('Is indoor plant?', isIndoor);
     return isIndoor;
   });
 
-  console.log('🏠 Filtered indoor plants:', indoorPlants);
-  console.log('📋 Indoor plants count:', indoorPlants.length);
+  console.log('Filtered indoor plants:', indoorPlants);
+
+  const handleAddToCart = async (productId: number) => {
+    try {
+      await addToCart(productId, 1);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
 
   const handleRetry = () => {
-    console.log('🔄 Retrying product fetch...');
+    console.log('Retrying product fetch...');
     refetch();
   };
 
+  // Loading state
   if (isLoading) {
-    console.log('⏳ Showing loading state');
-    return <LoadingState />;
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex-grow">
+          <div className="mb-6">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="space-y-4">
+                <Skeleton className="w-full h-64 rounded-md" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-16" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-10 flex-1" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  // Error state
   if (error) {
-    console.error('❌ Error loading products:', error);
-    return <ErrorState error={error} onRetry={handleRetry} isRefetching={isRefetching} />;
+    console.error('Error loading products:', error);
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation />
+        <div className="container mx-auto px-4 pt-24 flex-grow">
+          <div className="text-center max-w-md mx-auto">
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">Failed to load plants</h2>
+              <p className="text-muted-foreground mb-4">
+                We're having trouble loading the indoor plants. Please check your connection and try again.
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Error: {error instanceof Error ? error.message : 'Unknown error'}
+              </p>
+            </div>
+            <Button 
+              onClick={handleRetry} 
+              disabled={isRefetching}
+              className="mb-4"
+            >
+              {isRefetching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Try Again
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/')}
+            >
+              Go Back Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
+  // Success state
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
       
       <div className="container mx-auto px-4 pt-24 flex-grow">
-        <PageHeader 
-          title="Indoor Plants"
-          totalProducts={products.length}
-          filteredCount={indoorPlants.length}
-          isRefetching={isRefetching}
-        />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">Indoor Plants</h1>
+            <p className="text-muted-foreground mt-2">
+              Total products: {products.length} | Indoor plants: {indoorPlants.length}
+            </p>
+          </div>
+          {isRefetching && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Refreshing...
+            </div>
+          )}
+        </div>
         
         {indoorPlants.length > 0 ? (
-          <ProductGrid products={indoorPlants} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {indoorPlants.map((product, index) => (
+              <div
+                key={product.id}
+                className="product-card"
+                style={{ animationDelay: `${0.2 * index}s` }}
+              >
+                <LazyImage
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-64 object-cover rounded-md mb-4"
+                />
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">
+                    {product.category}
+                  </span>
+                  <h3 className="text-lg font-semibold">{product.name}</h3>
+                  <p className="text-muted-foreground">{product.description}</p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-primary font-medium">Rs {product.price}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Stock: {product.stock || 0}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => handleAddToCart(product.id)}
+                      disabled={!product.stock || product.stock <= 0}
+                    >
+                      {!product.stock || product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No products in database</h3>
+            <p className="text-muted-foreground mb-4">
+              It looks like there are no products in the database yet.
+            </p>
+            <Button onClick={() => navigate('/admin')} variant="outline">
+              Add Products (Admin)
+            </Button>
+          </div>
         ) : (
-          <EmptyState totalProducts={products.length} plantType="indoor" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
+              <Eye className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No indoor plants found</h3>
+            <p className="text-muted-foreground mb-4">
+              We have {products.length} products total, but none are categorized as indoor plants.
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => navigate('/outdoor-plants')} variant="outline">
+                View Outdoor Plants
+              </Button>
+              <Button onClick={() => navigate('/admin')} variant="outline">
+                Add Indoor Plants (Admin)
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
-      <PageFooter />
+      <footer className="py-6 px-4 bg-secondary/10 mt-12">
+        <div className="container mx-auto text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Plant&deco. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
