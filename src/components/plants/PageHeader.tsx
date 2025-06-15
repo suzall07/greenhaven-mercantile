@@ -13,9 +13,6 @@ export const PageHeader = ({ title, totalProducts, filteredCount, isRefetching }
     <div className="flex items-center justify-between mb-6">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold animate-fadeIn">{title}</h1>
-        <p className="text-muted-foreground mt-2">
-          Total products: {totalProducts} | {title}: {filteredCount}
-        </p>
       </div>
       {isRefetching && (
         <div className="flex items-center text-sm text-muted-foreground">
