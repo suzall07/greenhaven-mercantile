@@ -39,10 +39,16 @@ const Index = () => {
   const { addToCart } = useCart();
   const [carouselApi, setCarouselApi] = useState<any>(null);
   
+  console.log('Index component rendering...');
+  
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
   });
+
+  console.log('Products data:', products);
+  console.log('Loading state:', isLoading);
+  console.log('Error state:', error);
 
   // Set up auto-sliding for carousel
   useEffect(() => {
@@ -63,33 +69,51 @@ const Index = () => {
     try {
       await addToCart(productId, 1);
     } catch (error: any) {
+      console.error('Error adding to cart:', error);
       // Error handling is done in the cart context
     }
   };
 
   if (isLoading) {
+    console.log('Showing loading state...');
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
-          <div className="text-center">Loading...</div>
+          <div className="text-center">
+            <div className="animate-pulse">
+              <div className="h-8 w-32 bg-gray-300 rounded mx-auto mb-4"></div>
+              <div className="h-4 w-48 bg-gray-300 rounded mx-auto"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   if (error) {
+    console.error('Error loading products:', error);
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="container mx-auto px-4 pt-24">
           <div className="text-center text-red-500">
-            Error loading products. Please try again later.
+            <h2 className="text-xl font-semibold mb-2">Error loading products</h2>
+            <p>Please try refreshing the page</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Refresh Page
+            </Button>
           </div>
         </div>
       </div>
     );
   }
+
+  console.log('Rendering main content with products:', products.length);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -133,36 +157,47 @@ const Index = () => {
             <h2 className="text-2xl md:text-3xl font-semibold mb-8 text-center">
               Featured Products
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {products.slice(0, 3).map((product, index) => (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.id}`}
-                  className="product-card hover:shadow-md transition-shadow"
-                  style={{ animationDelay: `${0.2 * index}s` }}
-                >
-                  <div className="mb-4">
-                    <LazyImage
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-64 object-cover rounded-md"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <span className="text-sm text-muted-foreground">
-                      {product.category}
-                    </span>
-                    <h3 className="text-lg font-semibold">{product.name}</h3>
-                    <p className="text-primary font-medium">Rs {product.price}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link to="/indoor-plants">
-                <Button variant="outline">View All Products</Button>
-              </Link>
-            </div>
+            {products.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {products.slice(0, 3).map((product, index) => (
+                    <Link
+                      key={product.id}
+                      to={`/product/${product.id}`}
+                      className="product-card hover:shadow-md transition-shadow"
+                      style={{ animationDelay: `${0.2 * index}s` }}
+                    >
+                      <div className="mb-4">
+                        <LazyImage
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-64 object-cover rounded-md"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-sm text-muted-foreground">
+                          {product.category}
+                        </span>
+                        <h3 className="text-lg font-semibold">{product.name}</h3>
+                        <p className="text-primary font-medium">Rs {product.price}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="text-center mt-8">
+                  <Link to="/indoor-plants">
+                    <Button variant="outline">View All Products</Button>
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold mb-4">No Products Available</h3>
+                <p className="text-muted-foreground">
+                  We're working on adding products to our collection. Check back soon!
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
