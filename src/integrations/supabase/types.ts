@@ -80,6 +80,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          purchase_order_id: string
+          purchase_order_name: string
+          status: string
+          transaction_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          purchase_order_id: string
+          purchase_order_name: string
+          status: string
+          transaction_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          purchase_order_id?: string
+          purchase_order_name?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           comment: string | null
