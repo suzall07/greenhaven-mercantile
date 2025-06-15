@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 export async function getProducts() {
@@ -5,13 +6,20 @@ export async function getProducts() {
   console.log('🔗 Supabase client initialized:', !!supabase);
   
   try {
-    // First, let's check the connection
+    // Test basic connection first
     console.log('📡 Testing Supabase connection...');
     
-    const { data, error } = await supabase
+    // Add timeout to prevent hanging
+    const queryPromise = supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+    });
+    
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
     
     console.log('📊 Raw Supabase response:', { data, error });
     
@@ -69,7 +77,10 @@ export async function getProducts() {
       message: error.message,
       stack: error.stack
     });
-    throw error;
+    
+    // Return empty array instead of throwing to prevent app crashes
+    console.log('🔄 Returning empty array due to error');
+    return [];
   }
 }
 
