@@ -49,6 +49,7 @@ export const ProductFormFields = ({ formData, onChange }: ProductFormFieldsProps
             <SelectContent>
               <SelectItem value="indoor">Indoor Plants</SelectItem>
               <SelectItem value="outdoor">Outdoor Plants</SelectItem>
+              <SelectItem value="decoration">Decorations</SelectItem>
             </SelectContent>
           </Select>
         </div>
