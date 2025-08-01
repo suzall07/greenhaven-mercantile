@@ -126,6 +126,14 @@ export const Navigation = () => {
                 Outdoor Plants
               </button>
               <button
+                onClick={handleNavigation('/decorations')}
+                className={`transition-colors ${
+                  isActive('/decorations') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
+                }`}
+              >
+                Decorations
+              </button>
+              <button
                 onClick={handleNavigation('/about')}
                 className={`transition-colors ${
                   isActive('/about') ? 'text-primary font-medium' : 'text-gray-600 hover:text-primary'
